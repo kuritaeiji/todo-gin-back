@@ -1,5 +1,8 @@
 version: 2.1
 
+orbs: 
+  heroku: circleci/heroku@1.2.6
+
 jobs:
   build_and_test:
     docker:
@@ -21,8 +24,20 @@ jobs:
           key: go-modules-{{ checksum "go.sum" }}
       - run: sleep 30
       - run: go test -v ./...
+  deploy:
+    executor: heroku/default
+    steps:
+      - checkout
+      - heroku/install
+      - heroku/deploy-via-git
 
 workflows:
   build_and_deploy:
     jobs:
       - build_and_test
+      - deploy:
+          requires:
+              - build_and_test
+          filters:
+            branches:
+              only: master
