@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/kuritaeiji/todo-gin-back/model"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -23,7 +24,7 @@ func Init() {
 		os.Getenv("MYSQL_PASSWORD"),
 		os.Getenv("MYSQL_HOST"),
 		os.Getenv("MYSQL_PORT"),
-		os.Getenv("MYSAL_DATABASE"),
+		os.Getenv("MYSQL_DATABASE"),
 	)
 	initDB(dsn, logger.Info)
 }
@@ -36,6 +37,7 @@ func initDB(dsn string, logLevel logger.LogLevel) {
 	if err != nil {
 		panic(fmt.Sprintf("Failed to open mysql\n%v", err.Error()))
 	}
+	migrate()
 }
 
 func GetDB() *gorm.DB {
@@ -53,8 +55,16 @@ func CloseDB() {
 	}
 }
 
+func migrate() {
+	db.AutoMigrate(model.User{})
+}
+
 // test
 func TestInit() {
 	dsn := "root:password@tcp(localhost:3306)/app-test?charset=utf8mb4&parseTime=True&loc=Local"
 	initDB(dsn, logger.Error)
+}
+
+func DeleteAll() {
+	db.Exec("DELETE FROM users")
 }

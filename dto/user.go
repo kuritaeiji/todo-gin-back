@@ -1,6 +1,6 @@
 package dto
 
 type User struct {
-	Email    string `json:"email" binding:"required,email,unique"`
+	Email    string `json:"email" binding:"required,max=100,email,unique"`
 	Password string `json:"password" binding:"required,min=8,max=50,password"`
 }
