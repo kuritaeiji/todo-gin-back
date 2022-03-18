@@ -25,8 +25,12 @@ func Init() {
 		os.Getenv("MYSQL_PORT"),
 		os.Getenv("MYSAL_DATABASE"),
 	)
+	initDB(dsn, logger.Info)
+}
+
+func initDB(dsn string, logLevel logger.LogLevel) {
 	db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.LogLevel(logger.Info)),
+		Logger: logger.Default.LogMode(logLevel),
 	})
 
 	if err != nil {
@@ -47,4 +51,10 @@ func CloseDB() {
 	if err != nil {
 		panic(fmt.Sprintf("Failed to close mysql\n%v", err.Error()))
 	}
+}
+
+// test
+func TestInit() {
+	dsn := "root:password@tcp(localhost:3306)/app-test?charset=utf8mb4&parseTime=True&loc=Local"
+	initDB(dsn, logger.Error)
 }
