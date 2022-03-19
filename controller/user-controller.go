@@ -12,11 +12,12 @@ type UserController interface {
 }
 
 type userController struct {
-	service service.UserService
+	service      service.UserService
+	emailService service.EmailService
 }
 
 func NewUserController() UserController {
-	return &userController{service.NewUserService()}
+	return &userController{service.NewUserService(), service.NewEmailService()}
 }
 
 func (c *userController) Create(ctx *gin.Context) {
@@ -27,6 +28,7 @@ func (c *userController) Create(ctx *gin.Context) {
 		})
 		return
 	}
+	c.emailService.ActivationUserEmail(user)
 	ctx.JSON(200, user)
 }
 

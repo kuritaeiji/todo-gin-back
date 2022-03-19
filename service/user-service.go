@@ -9,8 +9,8 @@ import (
 )
 
 type UserService interface {
-	Create(ctx *gin.Context) (model.User, error)
-	IsUniqueEmail(ctx *gin.Context) bool
+	Create(*gin.Context) (model.User, error)
+	IsUniqueEmail(*gin.Context) bool
 }
 
 type userService struct {

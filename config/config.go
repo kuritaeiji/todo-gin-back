@@ -13,6 +13,7 @@ func Init() {
 		err = godotenv.Load("config/release.env")
 	} else {
 		err = godotenv.Load("config/development.env")
+		_ = godotenv.Load("config/secret.env")
 	}
 
 	if err != nil {
