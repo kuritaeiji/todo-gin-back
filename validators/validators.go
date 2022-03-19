@@ -3,18 +3,31 @@ package validators
 import (
 	"regexp"
 
+	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
+	"github.com/kuritaeiji/todo-gin-back/db"
+	"github.com/kuritaeiji/todo-gin-back/model"
 )
 
 var validate *validator.Validate
 
 func Init() {
-	validate = validator.New()
-	validate.RegisterValidation("password", password)
+	var ok bool
+	if validate, ok = binding.Validator.Engine().(*validator.Validate); ok {
+		validate.RegisterValidation("password", password)
+		validate.RegisterValidation("unique_email", uniqueEmail)
+	}
 }
 
 func GetValidate() *validator.Validate {
 	return validate
+}
+
+func uniqueEmail(fl validator.FieldLevel) bool {
+	var count int64
+	value := fl.Field().String()
+	db.GetDB().Model(&model.User{}).Where("email = ?", value).Count(&count)
+	return count == 0
 }
 
 func password(fl validator.FieldLevel) bool {
