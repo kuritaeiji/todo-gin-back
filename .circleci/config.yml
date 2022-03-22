@@ -8,7 +8,7 @@ jobs:
     docker:
       - image: golang:1.17.2
         environment:
-          TODO_GIN_WORKDIR: /app
+          TODO_GIN_WORKDIR: /root/project
       - image: mysql:5.7
         environment:
           MYSQL_DATABASE: app-test
