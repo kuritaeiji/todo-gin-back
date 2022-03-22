@@ -7,7 +7,7 @@ import (
 	"github.com/golang-jwt/jwt"
 )
 
-type userClaim struct {
+type UserClaim struct {
 	Id int `json:"id"`
 	jwt.StandardClaims
 }
@@ -25,7 +25,7 @@ func NewJWTService() JWTService {
 }
 
 func (s *jwtService) CreateJWT(id int, dayFromNow int) string {
-	claim := userClaim{
+	claim := UserClaim{
 		id,
 		jwt.StandardClaims{ExpiresAt: time.Now().AddDate(0, 0, dayFromNow).Unix()},
 	}

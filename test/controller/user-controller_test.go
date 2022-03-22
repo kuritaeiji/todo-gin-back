@@ -1,96 +1,81 @@
 package controller_test
 
 import (
-	"encoding/json"
-	"fmt"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin/binding"
-	"github.com/kuritaeiji/todo-gin-back/db"
+	"github.com/go-playground/validator/v10"
+	"github.com/golang/mock/gomock"
+	"github.com/kuritaeiji/todo-gin-back/controller"
+	"github.com/kuritaeiji/todo-gin-back/mock_service"
 	"github.com/kuritaeiji/todo-gin-back/model"
-	"github.com/kuritaeiji/todo-gin-back/server"
-	"github.com/kuritaeiji/todo-gin-back/validators"
 	"github.com/stretchr/testify/assert"
-	"gorm.io/gorm"
 )
 
 var (
-	router   *gin.Engine
-	database *gorm.DB
+	assertion *assert.Assertions
+
+	ctrl controller.UserController
+
+	userServiceMock  *mock_service.MockUserService
+	emailServiceMock *mock_service.MockEmailService
+
+	ctx *gin.Context
+	rec *httptest.ResponseRecorder
 )
 
-func TestMain(m *testing.M) {
-	validators.Init()
-	db.TestInit()
-	database = db.GetDB()
-	defer db.CloseDB()
-	router = server.RouterSetUp()
+func prepareTest(t *testing.T) {
+	assertion = assert.New(t)
 
+	userMockCtrl := gomock.NewController(t)
+	emailMockCtrl := gomock.NewController(t)
+	userServiceMock = mock_service.NewMockUserService(userMockCtrl)
+	emailServiceMock = mock_service.NewMockEmailService(emailMockCtrl)
+
+	ctrl = controller.TestNewUserController(userServiceMock, emailServiceMock)
+
+	rec = httptest.NewRecorder()
+	ctx, _ = gin.CreateTestContext(rec)
+}
+
+func TestMain(m *testing.M) {
+	gin.SetMode(gin.TestMode)
 	m.Run()
 }
 
 func TestCreate(t *testing.T) {
-	assert := assert.New(t)
+	prepareTest(t)
+	user := model.User{Email: "user@example.com", PasswordDigest: "password"}
+	userServiceMock.EXPECT().Create(ctx).Return(user, nil)
+	emailServiceMock.EXPECT().ActivationUserEmail(user)
 
-	tests := map[string]struct {
-		body       string
-		code       int
-		userLength int
-	}{
-		"normal":  {body: `{"email":"user@example.com","password":"Password1010"}`, code: 200, userLength: 1},
-		"invalid": {body: `{"email":"","password":""}`, code: 400, userLength: 0},
-	}
-
-	for testName, test := range tests {
-		t.Run(testName, func(t *testing.T) {
-			bodyReader := strings.NewReader(test.body)
-			req := httptest.NewRequest("POST", "/users", bodyReader)
-			req.Header.Add("Content-Type", binding.MIMEJSON)
-			rec := httptest.NewRecorder()
-			router.ServeHTTP(rec, req)
-
-			var count int64
-			database.Model(&model.User{}).Count(&count)
-
-			assert.Equal(test.code, rec.Code)
-			assert.Equal(test.userLength, int(count))
-
-			if testName == "normal" {
-				var user model.User
-				json.Unmarshal(rec.Body.Bytes(), &user)
-				assert.Equal("user@example.com", user.Email)
-			}
-			db.DeleteAll()
-		})
-	}
+	ctrl.Create(ctx)
+	assertion.Equal(200, rec.Code)
 }
 
-func TestIsUniqueEmail(t *testing.T) {
-	assert := assert.New(t)
+func TestInvalidCreate(t *testing.T) {
+	prepareTest(t)
+	var verr validator.ValidationErrors
+	var err error = verr
+	userServiceMock.EXPECT().Create(ctx).Return(model.User{}, err)
 
-	email := "user@example.com"
-	tests := map[string]struct {
-		callback func()
-		code     int
-	}{
-		"unique": {func() {}, 200},
-		"not unique": {func() {
-			database.Create(&model.User{Email: email, PasswordDigest: "pass"})
-		}, 400},
-	}
+	ctrl.Create(ctx)
+	assertion.Equal(400, rec.Code)
+}
 
-	for testName, test := range tests {
-		t.Run(testName, func(t *testing.T) {
-			test.callback()
-			req := httptest.NewRequest("GET", fmt.Sprintf("/users/unique-email?email=%v", email), nil)
-			rec := httptest.NewRecorder()
-			router.ServeHTTP(rec, req)
+func TestIsUnique(t *testing.T) {
+	prepareTest(t)
+	userServiceMock.EXPECT().IsUnique(ctx).Return(true)
 
-			assert.Equal(rec.Code, test.code)
-			db.DeleteAll()
-		})
-	}
+	ctrl.IsUnique(ctx)
+	assertion.Equal(200, rec.Code)
+}
+
+func TestBadIsUnique(t *testing.T) {
+	prepareTest(t)
+	userServiceMock.EXPECT().IsUnique(ctx).Return(false)
+
+	ctrl.IsUnique(ctx)
+	assertion.Equal(400, rec.Code)
 }

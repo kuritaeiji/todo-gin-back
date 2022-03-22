@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/kuritaeiji/todo-gin-back/model"
 	"gorm.io/driver/mysql"
@@ -26,7 +27,8 @@ func Init() {
 		os.Getenv("MYSQL_PORT"),
 		os.Getenv("MYSQL_DATABASE"),
 	)
-	initDB(dsn, logger.Info)
+	logLevelInt, _ := strconv.Atoi(os.Getenv("MYSQL_LOG_LEVEL"))
+	initDB(dsn, logger.LogLevel(logLevelInt))
 }
 
 func initDB(dsn string, logLevel logger.LogLevel) {
@@ -60,11 +62,6 @@ func migrate() {
 }
 
 // test
-func TestInit() {
-	dsn := "root:password@tcp(localhost:3306)/app-test?charset=utf8mb4&parseTime=True&loc=Local"
-	initDB(dsn, logger.Error)
-}
-
 func DeleteAll() {
 	db.Exec("DELETE FROM users")
 }
