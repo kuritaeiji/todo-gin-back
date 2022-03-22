@@ -25,6 +25,7 @@ jobs:
             - "/go/pkg/mod"
           key: go-modules-{{ checksum "go.sum" }}
       - run: sleep 30
+      - run: pwd
       - run: go test -v ./...
   deploy:
     executor: heroku/default

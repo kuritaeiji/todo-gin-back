@@ -15,7 +15,6 @@ var (
 func Init() {
 	var err, err2, err3 error
 	WorkDir = os.Getenv("TODO_GIN_WORKDIR")
-	println(WorkDir)
 	switch gin.Mode() {
 	case gin.DebugMode:
 		err = godotenv.Load(fmt.Sprintf("%v/config/development.env", WorkDir))
