@@ -57,6 +57,16 @@ var (
 		Code: 401,
 		Json: createJson(PasswordAuthenticationError.Error()),
 	}
+
+	GuestErrorResponse = ErrorResponse{
+		Code: 401,
+		Json: createJson("user is already logged in"),
+	}
+
+	NotLoggedInErrorResponse = ErrorResponse{
+		Code: 401,
+		Json: createJson("user is not logged in"),
+	}
 )
 
 func createJson(content string) gin.H {

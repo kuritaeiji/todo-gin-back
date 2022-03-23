@@ -80,6 +80,15 @@ func (suite *UserRequestTestSuite) TestSuccessCreate() {
 	suite.Equal(200, suite.rec.Code)
 }
 
+func (suite *UserRequestTestSuite) TestBadCreateWithNotGuest() {
+	req := httptest.NewRequest("POST", "/users", nil)
+	req.Header.Add("Authorization", "Bearer token")
+	suite.router.ServeHTTP(suite.rec, req)
+
+	suite.Equal(config.GuestErrorResponse.Code, suite.rec.Code)
+	suite.Contains(suite.rec.Body.String(), config.GuestErrorResponse.Json["content"])
+}
+
 func (suite *UserRequestTestSuite) TestBadCreateWithInvalid() {
 	bodyReader := strings.NewReader(`{"email":"","password":""}`)
 	req := httptest.NewRequest("POST", "/users", bodyReader)
@@ -130,6 +139,15 @@ func (suite *UserRequestTestSuite) TestSuccessUnique() {
 	suite.Equal(200, suite.rec.Code)
 }
 
+func (suite *UserRequestTestSuite) TestBadIsUniqueWithNotGuest() {
+	req := httptest.NewRequest("POST", "/users/unique", nil)
+	req.Header.Add("Authorization", "Bearer token")
+	suite.router.ServeHTTP(suite.rec, req)
+
+	suite.Equal(config.GuestErrorResponse.Code, suite.rec.Code)
+	suite.Contains(suite.rec.Body.String(), config.GuestErrorResponse.Json["content"])
+}
+
 func (suite *UserRequestTestSuite) TestBadUnique() {
 	email := "user@example.com"
 	db.GetDB().Create(&model.User{Email: email, PasswordDigest: "pass"})
@@ -150,6 +168,15 @@ func (suite *UserRequestTestSuite) TestSuccessActivate() {
 	suite.Equal(200, suite.rec.Code)
 	db.GetDB().First(&user)
 	suite.True(user.Activated)
+}
+
+func (suite *UserRequestTestSuite) TestBadActivateWithNotGuest() {
+	req := httptest.NewRequest("PUT", "/users/activate", nil)
+	req.Header.Add("Authorization", "Bearer token")
+	suite.router.ServeHTTP(suite.rec, req)
+
+	suite.Equal(config.GuestErrorResponse.Code, suite.rec.Code)
+	suite.Contains(suite.rec.Body.String(), config.GuestErrorResponse.Json["content"])
 }
 
 func (suite *UserRequestTestSuite) TestBadActivateWithExpiredJWT() {

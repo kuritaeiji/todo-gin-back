@@ -14,6 +14,7 @@ import (
 	"github.com/kuritaeiji/todo-gin-back/controller"
 	"github.com/kuritaeiji/todo-gin-back/db"
 	"github.com/kuritaeiji/todo-gin-back/dto"
+	"github.com/kuritaeiji/todo-gin-back/factory"
 	"github.com/kuritaeiji/todo-gin-back/model"
 	"github.com/kuritaeiji/todo-gin-back/server"
 	"github.com/kuritaeiji/todo-gin-back/service"
@@ -81,6 +82,17 @@ func (suite *AuthRequestTestSuite) TestSuccessLogin() {
 	suite.Equal(user.ID, claim.ID)
 	suite.InEpsilon(time.Now().AddDate(0, 0, service.DayFromNowAccessToken).Unix(), claim.ExpiresAt, 30)
 	suite.Nil(err)
+}
+
+func (suite *AuthRequestTestSuite) TestBadLoginWithAreadyLogin() {
+	user := factory.CreateUser(factory.UserConfig{Email: email, Password: password})
+	tokenString := factory.CreateAccessToken(user)
+	req := httptest.NewRequest("POST", "/login", nil)
+	req.Header.Add("Authorization", "Bearer "+tokenString)
+	suite.router.ServeHTTP(suite.rec, req)
+
+	suite.Equal(config.GuestErrorResponse.Code, suite.rec.Code)
+	suite.Contains(suite.rec.Body.String(), config.GuestErrorResponse.Json["content"])
 }
 
 func (suite *AuthRequestTestSuite) TestBadLoginWithRecordNotFound() {
