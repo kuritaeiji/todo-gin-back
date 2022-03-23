@@ -1,6 +1,8 @@
 package request_test
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http/httptest"
 	"os"
@@ -13,20 +15,18 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/kuritaeiji/todo-gin-back/config"
 	"github.com/kuritaeiji/todo-gin-back/db"
-	"github.com/kuritaeiji/todo-gin-back/mock_service"
+	"github.com/kuritaeiji/todo-gin-back/mock_gateway"
 	"github.com/kuritaeiji/todo-gin-back/model"
 	"github.com/kuritaeiji/todo-gin-back/server"
 	"github.com/kuritaeiji/todo-gin-back/service"
 	"github.com/kuritaeiji/todo-gin-back/validators"
-	"github.com/sendgrid/rest"
-	"github.com/sendgrid/sendgrid-go/helpers/mail"
 	"github.com/stretchr/testify/suite"
 )
 
 type UserRequestTestSuite struct {
 	suite.Suite
 	router *gin.Engine
-	mock   *mock_service.MockEmailClient
+	mock   *mock_gateway.MockEmailGateway
 	rec    *httptest.ResponseRecorder
 }
 
@@ -38,9 +38,9 @@ func (suite *UserRequestTestSuite) SetupSuite() {
 }
 
 func (suite *UserRequestTestSuite) SetupTest() {
-	emailClientMock := mock_service.NewMockEmailClient(gomock.NewController(suite.T()))
-	suite.router = server.TestRouterSetup(emailClientMock)
-	suite.mock = emailClientMock
+	emailGatewayMock := mock_gateway.NewMockEmailGateway(gomock.NewController(suite.T()))
+	suite.router = server.TestRouterSetup(emailGatewayMock)
+	suite.mock = emailGatewayMock
 	suite.rec = httptest.NewRecorder()
 }
 
@@ -64,21 +64,17 @@ func (suite *UserRequestTestSuite) TestSuccessCreate() {
 	req.Header.Add("Content-Type", binding.MIMEJSON)
 
 	var tokenString string
-	doFunc := func(msg *mail.SGMailV3) {
-		suite.Equal(os.Getenv("FROM_EMAIL_NAME"), msg.From.Name)
-		suite.Equal(os.Getenv("FROM_EMAIL_ADDRESS"), msg.From.Address)
-		suite.Equal("アカウント有効化リンク", msg.Subject)
-		suite.Equal(email, msg.Personalizations[0].To[0].Address)
-		suite.Contains(msg.Content[0].Value, fmt.Sprintf(`<a href="%v/activate?token=`, os.Getenv("FRONT_ORIGIN")))
+	doFunc := func(email, subject, htmlString string) {
+		suite.Contains(htmlString, fmt.Sprintf(`<a href="%v/activate?token=`, os.Getenv("FRONT_ORIGIN")))
 		re, _ := regexp.Compile(`token=(.+)">`)
-		tokenString = re.FindStringSubmatch(msg.Content[0].Value)[1]
+		tokenString = re.FindStringSubmatch(htmlString)[1]
 		claim, err := service.NewJWTService().VerifyJWT(tokenString)
 		suite.Nil(err)
 		var user model.User
 		db.GetDB().First(&user)
 		suite.Equal(user.ID, claim.ID)
 	}
-	suite.mock.EXPECT().Send(gomock.Any()).Return(&rest.Response{}, nil).Do(doFunc)
+	suite.mock.EXPECT().Send(email, "アカウント有効化リンク", gomock.Any()).Return(nil).Do(doFunc)
 
 	suite.router.ServeHTTP(suite.rec, req)
 	suite.Equal(200, suite.rec.Code)
@@ -90,9 +86,9 @@ func (suite *UserRequestTestSuite) TestBadCreateWithInvalid() {
 	req.Header.Add("Content-Type", binding.MIMEJSON)
 
 	suite.router.ServeHTTP(suite.rec, req)
-	suite.Equal(config.ValidationErrorReesponse.Code, suite.rec.Code)
+	suite.Equal(config.ValidationErrorResponse.Code, suite.rec.Code)
 	body := suite.rec.Body.String()
-	suite.Contains(body, config.ValidationErrorReesponse.Json["content"])
+	suite.Contains(body, config.ValidationErrorResponse.Json["content"])
 }
 
 func (suite *UserRequestTestSuite) TestBadCreateWithNotUnique() {
@@ -106,6 +102,26 @@ func (suite *UserRequestTestSuite) TestBadCreateWithNotUnique() {
 
 	suite.router.ServeHTTP(suite.rec, req)
 	suite.Equal(config.UniqueUserErrorResponse.Code, suite.rec.Code)
+}
+
+func (suite *UserRequestTestSuite) TestBadCreateWithEmailClientError() {
+	email := "user@example.com"
+	body := map[string]string{
+		"email":    email,
+		"password": "Password1010",
+	}
+	bodyJson, err := json.Marshal(body)
+	if err != nil {
+		panic(err)
+	}
+	req := httptest.NewRequest("POST", "/users", strings.NewReader(string(bodyJson)))
+	req.Header.Add("Content-Type", binding.MIMEJSON)
+	err = errors.New("email client error")
+	suite.mock.EXPECT().Send(email, "アカウント有効化リンク", gomock.Any()).Return(err)
+	suite.router.ServeHTTP(suite.rec, req)
+
+	suite.Equal(config.EmailClientErrorResponse.Code, suite.rec.Code)
+	suite.Contains(suite.rec.Body.String(), config.EmailClientErrorResponse.Json["content"])
 }
 
 func (suite *UserRequestTestSuite) TestSuccessUnique() {

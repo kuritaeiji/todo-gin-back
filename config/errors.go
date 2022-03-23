@@ -40,9 +40,14 @@ var (
 		Json: createJson("not unique user"),
 	}
 
-	ValidationErrorReesponse = ErrorResponse{
+	ValidationErrorResponse = ErrorResponse{
 		Code: 400,
 		Json: createJson("validation error"),
+	}
+
+	EmailClientErrorResponse = ErrorResponse{
+		Code: 500,
+		Json: createJson("email client error"),
 	}
 )
 

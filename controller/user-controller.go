@@ -27,7 +27,7 @@ func NewUserController() UserController {
 func (c *userController) Create(ctx *gin.Context) {
 	user, err := c.service.Create(ctx)
 	if _, ok := err.(validator.ValidationErrors); ok {
-		ctx.JSON(config.ValidationErrorReesponse.Code, config.ValidationErrorReesponse.Json)
+		ctx.JSON(config.ValidationErrorResponse.Code, config.ValidationErrorResponse.Json)
 		return
 	}
 
@@ -36,7 +36,10 @@ func (c *userController) Create(ctx *gin.Context) {
 		return
 	}
 
-	c.emailService.ActivationUserEmail(user)
+	if err := c.emailService.ActivationUserEmail(user); err != nil {
+		ctx.JSON(config.EmailClientErrorResponse.Code, config.EmailClientErrorResponse.Json)
+		return
+	}
 	ctx.Status(200)
 }
 

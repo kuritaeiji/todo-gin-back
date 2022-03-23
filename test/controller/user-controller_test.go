@@ -56,8 +56,8 @@ func (suite *UserControllerTestSuite) TestBadCreateWithValidationError() {
 	suite.userServiceMock.EXPECT().Create(suite.ctx).Return(model.User{}, err)
 
 	suite.controller.Create(suite.ctx)
-	suite.Equal(config.ValidationErrorReesponse.Code, suite.rec.Code)
-	suite.Contains(suite.rec.Body.String(), config.ValidationErrorReesponse.Json["content"])
+	suite.Equal(config.ValidationErrorResponse.Code, suite.rec.Code)
+	suite.Contains(suite.rec.Body.String(), config.ValidationErrorResponse.Json["content"])
 }
 
 func (suite *UserControllerTestSuite) TestBadCreateWithNotUniqueUser() {

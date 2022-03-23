@@ -9,8 +9,6 @@ import (
 
 	gomock "github.com/golang/mock/gomock"
 	model "github.com/kuritaeiji/todo-gin-back/model"
-	rest "github.com/sendgrid/rest"
-	mail "github.com/sendgrid/sendgrid-go/helpers/mail"
 )
 
 // MockEmailService is a mock of EmailService interface.
@@ -37,51 +35,15 @@ func (m *MockEmailService) EXPECT() *MockEmailServiceMockRecorder {
 }
 
 // ActivationUserEmail mocks base method.
-func (m *MockEmailService) ActivationUserEmail(arg0 model.User) {
+func (m *MockEmailService) ActivationUserEmail(arg0 model.User) error {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "ActivationUserEmail", arg0)
+	ret := m.ctrl.Call(m, "ActivationUserEmail", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // ActivationUserEmail indicates an expected call of ActivationUserEmail.
 func (mr *MockEmailServiceMockRecorder) ActivationUserEmail(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ActivationUserEmail", reflect.TypeOf((*MockEmailService)(nil).ActivationUserEmail), arg0)
-}
-
-// MockEmailClient is a mock of EmailClient interface.
-type MockEmailClient struct {
-	ctrl     *gomock.Controller
-	recorder *MockEmailClientMockRecorder
-}
-
-// MockEmailClientMockRecorder is the mock recorder for MockEmailClient.
-type MockEmailClientMockRecorder struct {
-	mock *MockEmailClient
-}
-
-// NewMockEmailClient creates a new mock instance.
-func NewMockEmailClient(ctrl *gomock.Controller) *MockEmailClient {
-	mock := &MockEmailClient{ctrl: ctrl}
-	mock.recorder = &MockEmailClientMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockEmailClient) EXPECT() *MockEmailClientMockRecorder {
-	return m.recorder
-}
-
-// Send mocks base method.
-func (m *MockEmailClient) Send(arg0 *mail.SGMailV3) (*rest.Response, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Send", arg0)
-	ret0, _ := ret[0].(*rest.Response)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Send indicates an expected call of Send.
-func (mr *MockEmailClientMockRecorder) Send(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Send", reflect.TypeOf((*MockEmailClient)(nil).Send), arg0)
 }
