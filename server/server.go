@@ -19,6 +19,7 @@ func routerSetup(userController controller.UserController) *gin.Engine {
 	{
 		user.POST("", userController.Create)
 		user.GET("/unique", userController.IsUnique)
+		user.PUT("/activate", userController.Activate)
 	}
 
 	return r

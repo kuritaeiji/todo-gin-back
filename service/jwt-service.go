@@ -1,5 +1,7 @@
 package service
 
+// mockgen -source=service/jwt-service.go -destination=mock_service/jwt-service.go
+
 import (
 	"os"
 	"time"
@@ -8,12 +10,13 @@ import (
 )
 
 type UserClaim struct {
-	Id int `json:"id"`
+	ID int `json:"id"`
 	jwt.StandardClaims
 }
 
 type JWTService interface {
 	CreateJWT(id int, dayFromNow int) string
+	VerifyJWT(tokdnString string) (*UserClaim, error)
 }
 
 type jwtService struct {
@@ -35,4 +38,16 @@ func (s *jwtService) CreateJWT(id int, dayFromNow int) string {
 		panic(err)
 	}
 	return tokenString
+}
+
+func (s *jwtService) VerifyJWT(tokenString string) (*UserClaim, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &UserClaim{}, func(t *jwt.Token) (interface{}, error) {
+		return s.key, nil
+	})
+
+	if claim, ok := token.Claims.(*UserClaim); ok && token.Valid {
+		return claim, nil
+	}
+
+	return &UserClaim{}, err
 }

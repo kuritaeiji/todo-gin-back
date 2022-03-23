@@ -35,6 +35,20 @@ func (m *MockUserService) EXPECT() *MockUserServiceMockRecorder {
 	return m.recorder
 }
 
+// Activate mocks base method.
+func (m *MockUserService) Activate(arg0 *gin.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Activate", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Activate indicates an expected call of Activate.
+func (mr *MockUserServiceMockRecorder) Activate(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Activate", reflect.TypeOf((*MockUserService)(nil).Activate), arg0)
+}
+
 // Create mocks base method.
 func (m *MockUserService) Create(arg0 *gin.Context) (model.User, error) {
 	m.ctrl.T.Helper()
@@ -51,11 +65,12 @@ func (mr *MockUserServiceMockRecorder) Create(arg0 interface{}) *gomock.Call {
 }
 
 // IsUnique mocks base method.
-func (m *MockUserService) IsUnique(arg0 *gin.Context) bool {
+func (m *MockUserService) IsUnique(arg0 *gin.Context) (bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "IsUnique", arg0)
 	ret0, _ := ret[0].(bool)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // IsUnique indicates an expected call of IsUnique.

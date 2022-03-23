@@ -1,36 +1,53 @@
 package service_test
 
 import (
-	"net/http/httptest"
-	"os"
 	"testing"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
 	"github.com/kuritaeiji/todo-gin-back/service"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
 )
 
-var jwtService service.JWTService
-
-func prepareJWTService(t *testing.T) {
-	assertion = assert.New(t)
-	jwtService = service.NewJWTService()
-	rec = httptest.NewRecorder()
-	ctx, _ = gin.CreateTestContext(rec)
+type JWTServiceTestSuite struct {
+	suite.Suite
+	service service.JWTService
 }
 
-func TestCreateJWT(t *testing.T) {
-	prepareJWTService(t)
+func (suite *JWTServiceTestSuite) SetupSuite() {
+	gin.SetMode(gin.TestMode)
+	suite.service = service.NewJWTService()
+}
+
+func TestJWTService(t *testing.T) {
+	suite.Run(t, &JWTServiceTestSuite{})
+}
+
+func (suite *JWTServiceTestSuite) TestSuccessCreateJWT() {
 	id := 1
 	dayFromNow := 1
-	tokenString := jwtService.CreateJWT(id, dayFromNow)
+	tokenString := suite.service.CreateJWT(id, dayFromNow)
+	claim, _ := suite.service.VerifyJWT(tokenString)
 
-	token, _ := jwt.ParseWithClaims(tokenString, &service.UserClaim{}, func(token *jwt.Token) (interface{}, error) {
-		return []byte(os.Getenv("JWT_SECRET_KEY")), nil
-	})
-	claim, _ := token.Claims.(*service.UserClaim)
-	assertion.Equal(1, claim.Id)
-	assertion.InEpsilon(time.Now().AddDate(0, 0, dayFromNow).Unix(), claim.ExpiresAt, 10)
+	suite.Equal(id, claim.ID)
+	suite.InEpsilon(time.Now().AddDate(0, 0, dayFromNow).Unix(), claim.ExpiresAt, 30)
+}
+
+func (suite *JWTServiceTestSuite) TestSuccessVerifyJWT() {
+	id := 1
+	dayFromNow := 1
+	tokenString := suite.service.CreateJWT(id, dayFromNow)
+	claim, err := suite.service.VerifyJWT(tokenString)
+
+	suite.Equal(id, claim.ID)
+	suite.Nil(err)
+}
+
+func (suite *JWTServiceTestSuite) TestBadVerifyJWTWithExpired() {
+	dayFromNow := -1
+	tokenString := suite.service.CreateJWT(1, dayFromNow)
+	_, err := suite.service.VerifyJWT(tokenString)
+
+	suite.IsType(&jwt.ValidationError{}, err)
 }

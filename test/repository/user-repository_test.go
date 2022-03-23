@@ -72,3 +72,14 @@ func (suite *UserRepositoryTestSuite) TestFalseIsUnique() {
 	result, _ := suite.userRepository.IsUnique(email)
 	suite.False(result)
 }
+
+func (suite *UserRepositoryTestSuite) TestSuccessActivate() {
+	user := model.User{ID: 1}
+	suite.db.Create(&user)
+	err := suite.userRepository.Activate(&user)
+
+	var ruser model.User
+	suite.db.First(&ruser)
+	suite.True(ruser.Activated)
+	suite.Nil(err)
+}

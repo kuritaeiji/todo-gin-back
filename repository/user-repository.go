@@ -12,6 +12,8 @@ import (
 type UserRepository interface {
 	Create(user *model.User) error
 	IsUnique(email string) (bool, error)
+	Activate(user *model.User) error
+	Find(id int) (model.User, error)
 }
 
 type userRepository struct {
@@ -38,4 +40,19 @@ func (r *userRepository) IsUnique(email string) (bool, error) {
 		return false, err
 	}
 	return count == 0, nil
+}
+
+func (r *userRepository) Activate(user *model.User) error {
+	user.Activated = true
+	return r.db.Save(user).Error
+}
+
+func (r *userRepository) Find(id int) (model.User, error) {
+	var user model.User
+	err := r.db.Where("id = ?", id).First(&user).Error
+	if err != nil {
+		return user, err
+	}
+
+	return user, nil
 }

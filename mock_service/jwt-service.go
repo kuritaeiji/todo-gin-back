@@ -8,6 +8,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	service "github.com/kuritaeiji/todo-gin-back/service"
 )
 
 // MockJWTService is a mock of JWTService interface.
@@ -45,4 +46,19 @@ func (m *MockJWTService) CreateJWT(id, dayFromNow int) string {
 func (mr *MockJWTServiceMockRecorder) CreateJWT(id, dayFromNow interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateJWT", reflect.TypeOf((*MockJWTService)(nil).CreateJWT), id, dayFromNow)
+}
+
+// VerifyJWT mocks base method.
+func (m *MockJWTService) VerifyJWT(tokdnString string) (*service.UserClaim, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "VerifyJWT", tokdnString)
+	ret0, _ := ret[0].(*service.UserClaim)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// VerifyJWT indicates an expected call of VerifyJWT.
+func (mr *MockJWTServiceMockRecorder) VerifyJWT(tokdnString interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyJWT", reflect.TypeOf((*MockJWTService)(nil).VerifyJWT), tokdnString)
 }

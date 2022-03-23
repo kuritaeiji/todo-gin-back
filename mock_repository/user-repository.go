@@ -34,6 +34,20 @@ func (m *MockUserRepository) EXPECT() *MockUserRepositoryMockRecorder {
 	return m.recorder
 }
 
+// Activate mocks base method.
+func (m *MockUserRepository) Activate(user *model.User) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Activate", user)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Activate indicates an expected call of Activate.
+func (mr *MockUserRepositoryMockRecorder) Activate(user interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Activate", reflect.TypeOf((*MockUserRepository)(nil).Activate), user)
+}
+
 // Create mocks base method.
 func (m *MockUserRepository) Create(user *model.User) error {
 	m.ctrl.T.Helper()
@@ -46,6 +60,21 @@ func (m *MockUserRepository) Create(user *model.User) error {
 func (mr *MockUserRepositoryMockRecorder) Create(user interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockUserRepository)(nil).Create), user)
+}
+
+// Find mocks base method.
+func (m *MockUserRepository) Find(id int) (model.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Find", id)
+	ret0, _ := ret[0].(model.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Find indicates an expected call of Find.
+func (mr *MockUserRepositoryMockRecorder) Find(id interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Find", reflect.TypeOf((*MockUserRepository)(nil).Find), id)
 }
 
 // IsUnique mocks base method.

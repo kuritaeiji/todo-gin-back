@@ -27,6 +27,6 @@ func Init() {
 
 	err3 = godotenv.Load(fmt.Sprintf("%v/config/common.env", WorkDir))
 	if err != nil || err2 != nil || err3 != nil {
-		panic(fmt.Sprintf("Failed to load env file\n"))
+		panic("Failed to load env file")
 	}
 }
