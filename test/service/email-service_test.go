@@ -8,6 +8,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
+	"github.com/kuritaeiji/todo-gin-back/config"
 	"github.com/kuritaeiji/todo-gin-back/mock_gateway"
 	"github.com/kuritaeiji/todo-gin-back/mock_service"
 	"github.com/kuritaeiji/todo-gin-back/model"
@@ -24,6 +25,7 @@ type EmailServiceTestSuite struct {
 
 func (suite *EmailServiceTestSuite) SetupSuite() {
 	gin.SetMode(gin.TestMode)
+	config.Init()
 }
 
 func (suite *EmailServiceTestSuite) SetupTest() {
@@ -43,7 +45,7 @@ func (suite *EmailServiceTestSuite) TestSuccessActivationUserEmail() {
 		suite.Contains(htmlString, fmt.Sprintf(`<a href="%v/activate?token=%v`, os.Getenv("FRONT_ORIGIN"), token))
 	}
 	suite.emailGatewayMock.EXPECT().Send(user.Email, "アカウント有効化リンク", gomock.Any()).Return(nil).Do(doFunc)
-	suite.jwtServiceMock.EXPECT().CreateJWT(user.ID, 1).Return(token)
+	suite.jwtServiceMock.EXPECT().CreateJWT(user, 1).Return(token)
 	err := suite.service.ActivationUserEmail(user)
 
 	suite.Nil(err)
@@ -53,7 +55,7 @@ func (suite *EmailServiceTestSuite) TestBadActivationUserEmailWithEmailGatewayEr
 	var user model.User
 	token := "token"
 	err := errors.New("email client error")
-	suite.jwtServiceMock.EXPECT().CreateJWT(user.ID, 1).Return(token)
+	suite.jwtServiceMock.EXPECT().CreateJWT(user, 1).Return(token)
 	suite.emailGatewayMock.EXPECT().Send(user.Email, "アカウント有効化リンク", gomock.Any()).Return(err)
 	rerr := suite.service.ActivationUserEmail(user)
 

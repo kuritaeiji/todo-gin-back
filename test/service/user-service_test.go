@@ -18,6 +18,7 @@ import (
 	"github.com/kuritaeiji/todo-gin-back/mock_service"
 	"github.com/kuritaeiji/todo-gin-back/model"
 	"github.com/kuritaeiji/todo-gin-back/service"
+	"github.com/kuritaeiji/todo-gin-back/validators"
 	"github.com/stretchr/testify/suite"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -33,6 +34,7 @@ type UserServiceTestSuite struct {
 
 func (suite *UserServiceTestSuite) SetupSuite() {
 	gin.SetMode(gin.TestMode)
+	validators.Init()
 }
 
 func (suite *UserServiceTestSuite) SetupTest() {

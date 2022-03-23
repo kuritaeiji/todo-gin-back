@@ -183,10 +183,9 @@ func (suite *UserRequestTestSuite) TestBadActivateWithRecordNotFound() {
 }
 
 func (suite *UserRequestTestSuite) TestBadActivateWithAlreadyActivatedUser() {
-	id := 1
-	user := model.User{Email: "email", PasswordDigest: "pass", ID: id, Activated: true}
+	user := model.User{Email: "email", PasswordDigest: "pass", ID: 1, Activated: true}
 	db.GetDB().Create(&user)
-	tokenString := service.NewJWTService().CreateJWT(model.User{}, 1)
+	tokenString := service.NewJWTService().CreateJWT(user, service.DayFromNowActivateUserToken)
 	req := httptest.NewRequest("PUT", fmt.Sprintf("/users/activate?token=%s", tokenString), nil)
 	suite.router.ServeHTTP(suite.rec, req)
 
