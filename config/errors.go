@@ -6,8 +6,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var UniqueUserError = errors.New("unique user error")
-var AlreadyActivatedUserError = errors.New("alreay activated user")
+var (
+	UniqueUserError             = errors.New("not unique user")
+	AlreadyActivatedUserError   = errors.New("alreay activated user")
+	PasswordAuthenticationError = errors.New("password is not authenticated")
+)
 
 type ErrorResponse struct {
 	Code int
@@ -32,12 +35,12 @@ var (
 
 	AlreadyActivatedUserErrorResponse = ErrorResponse{
 		Code: 401,
-		Json: createJson("already activated user"),
+		Json: createJson(AlreadyActivatedUserError.Error()),
 	}
 
 	UniqueUserErrorResponse = ErrorResponse{
 		Code: 400,
-		Json: createJson("not unique user"),
+		Json: createJson(UniqueUserError.Error()),
 	}
 
 	ValidationErrorResponse = ErrorResponse{
@@ -48,6 +51,11 @@ var (
 	EmailClientErrorResponse = ErrorResponse{
 		Code: 500,
 		Json: createJson("email client error"),
+	}
+
+	PasswordAuthenticationErrorResponse = ErrorResponse{
+		Code: 401,
+		Json: createJson(PasswordAuthenticationError.Error()),
 	}
 )
 

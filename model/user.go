@@ -1,6 +1,10 @@
 package model
 
-import "time"
+import (
+	"time"
+
+	"golang.org/x/crypto/bcrypt"
+)
 
 type User struct {
 	ID             int       `json:"id"`
@@ -9,4 +13,13 @@ type User struct {
 	Activated      bool      `gorm:"default:false" json:"activatedAt"`
 	CreatedAt      time.Time `json:"createdAt"`
 	UpdatedAt      time.Time `json:"updatedAt"`
+}
+
+func (user *User) Authenticate(password string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(user.PasswordDigest), []byte(password))
+	if err != nil {
+		return false
+	}
+
+	return true
 }

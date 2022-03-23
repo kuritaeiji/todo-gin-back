@@ -7,6 +7,12 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt"
+	"github.com/kuritaeiji/todo-gin-back/model"
+)
+
+const (
+	DayFromNowAccessToken       = 365
+	DayFromNowActivateUserToken = 1
 )
 
 type UserClaim struct {
@@ -15,7 +21,7 @@ type UserClaim struct {
 }
 
 type JWTService interface {
-	CreateJWT(id int, dayFromNow int) string
+	CreateJWT(user model.User, dayFromNow int) string
 	VerifyJWT(tokdnString string) (*UserClaim, error)
 }
 
@@ -27,9 +33,9 @@ func NewJWTService() JWTService {
 	return &jwtService{[]byte(os.Getenv("JWT_SECRET_KEY"))}
 }
 
-func (s *jwtService) CreateJWT(id int, dayFromNow int) string {
+func (s *jwtService) CreateJWT(user model.User, dayFromNow int) string {
 	claim := UserClaim{
-		id,
+		user.ID,
 		jwt.StandardClaims{ExpiresAt: time.Now().AddDate(0, 0, dayFromNow).Unix()},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claim)

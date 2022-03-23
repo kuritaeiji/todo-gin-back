@@ -8,13 +8,14 @@ import (
 )
 
 func Init() {
-	router := routerSetup(controller.NewUserController())
+	router := RouterSetup(controller.NewUserController())
 	router.Run()
 }
 
-func routerSetup(userController controller.UserController) *gin.Engine {
+func RouterSetup(userController controller.UserController) *gin.Engine {
 	r := gin.Default()
 
+	r.POST("/login", controller.NewAuthController().Login)
 	user := r.Group("/users")
 	{
 		user.POST("", userController.Create)
@@ -30,5 +31,5 @@ func TestRouterSetup(emailClientMock *mock_gateway.MockEmailGateway) *gin.Engine
 	con := controller.TestNewUserController(service.NewUserService(), service.TestNewEmailService(
 		emailClientMock, service.NewJWTService(),
 	))
-	return routerSetup(con)
+	return RouterSetup(con)
 }

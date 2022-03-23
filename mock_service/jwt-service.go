@@ -8,6 +8,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	model "github.com/kuritaeiji/todo-gin-back/model"
 	service "github.com/kuritaeiji/todo-gin-back/service"
 )
 
@@ -35,17 +36,17 @@ func (m *MockJWTService) EXPECT() *MockJWTServiceMockRecorder {
 }
 
 // CreateJWT mocks base method.
-func (m *MockJWTService) CreateJWT(id, dayFromNow int) string {
+func (m *MockJWTService) CreateJWT(user model.User, dayFromNow int) string {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateJWT", id, dayFromNow)
+	ret := m.ctrl.Call(m, "CreateJWT", user, dayFromNow)
 	ret0, _ := ret[0].(string)
 	return ret0
 }
 
 // CreateJWT indicates an expected call of CreateJWT.
-func (mr *MockJWTServiceMockRecorder) CreateJWT(id, dayFromNow interface{}) *gomock.Call {
+func (mr *MockJWTServiceMockRecorder) CreateJWT(user, dayFromNow interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateJWT", reflect.TypeOf((*MockJWTService)(nil).CreateJWT), id, dayFromNow)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateJWT", reflect.TypeOf((*MockJWTService)(nil).CreateJWT), user, dayFromNow)
 }
 
 // VerifyJWT mocks base method.

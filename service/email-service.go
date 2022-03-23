@@ -41,7 +41,7 @@ func (s *emailService) ActivationUserEmail(user model.User) error {
 }
 
 func (s *emailService) activationHTML(user model.User) string {
-	token := s.jwtService.CreateJWT(user.ID, 1)
+	token := s.jwtService.CreateJWT(user, DayFromNowActivateUserToken)
 	html := template.Must(template.ParseFiles(fmt.Sprintf("%v/template/activation-user.html", config.WorkDir)))
 	pr, pw := io.Pipe()
 	go func() {

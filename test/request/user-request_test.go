@@ -142,7 +142,7 @@ func (suite *UserRequestTestSuite) TestSuccessActivate() {
 	id := 1
 	user := model.User{ID: id, Email: "mail", PasswordDigest: "pass"}
 	db.GetDB().Create(&user)
-	tokenString := service.NewJWTService().CreateJWT(id, 1)
+	tokenString := service.NewJWTService().CreateJWT(user, 1)
 
 	req := httptest.NewRequest("PUT", fmt.Sprintf("/users/activate?token=%s", tokenString), nil)
 	suite.router.ServeHTTP(suite.rec, req)
@@ -153,7 +153,7 @@ func (suite *UserRequestTestSuite) TestSuccessActivate() {
 }
 
 func (suite *UserRequestTestSuite) TestBadActivateWithExpiredJWT() {
-	tokenString := service.NewJWTService().CreateJWT(1, -1)
+	tokenString := service.NewJWTService().CreateJWT(model.User{}, -1)
 	req := httptest.NewRequest("PUT", fmt.Sprintf("/users/activate?token=%s", tokenString), nil)
 	suite.router.ServeHTTP(suite.rec, req)
 
@@ -163,7 +163,7 @@ func (suite *UserRequestTestSuite) TestBadActivateWithExpiredJWT() {
 }
 
 func (suite *UserRequestTestSuite) TestBadActivateWithInvalidJWT() {
-	tokenString := service.NewJWTService().CreateJWT(1, 1) + "invalid"
+	tokenString := service.NewJWTService().CreateJWT(model.User{}, 1) + "invalid"
 	req := httptest.NewRequest("PUT", fmt.Sprintf("/users/activate?token=%s", tokenString), nil)
 	suite.router.ServeHTTP(suite.rec, req)
 
@@ -173,7 +173,7 @@ func (suite *UserRequestTestSuite) TestBadActivateWithInvalidJWT() {
 }
 
 func (suite *UserRequestTestSuite) TestBadActivateWithRecordNotFound() {
-	tokenString := service.NewJWTService().CreateJWT(1, 1)
+	tokenString := service.NewJWTService().CreateJWT(model.User{}, 1)
 	req := httptest.NewRequest("PUT", fmt.Sprintf("/users/activate?token=%s", tokenString), nil)
 	suite.router.ServeHTTP(suite.rec, req)
 
@@ -186,7 +186,7 @@ func (suite *UserRequestTestSuite) TestBadActivateWithAlreadyActivatedUser() {
 	id := 1
 	user := model.User{Email: "email", PasswordDigest: "pass", ID: id, Activated: true}
 	db.GetDB().Create(&user)
-	tokenString := service.NewJWTService().CreateJWT(1, 1)
+	tokenString := service.NewJWTService().CreateJWT(model.User{}, 1)
 	req := httptest.NewRequest("PUT", fmt.Sprintf("/users/activate?token=%s", tokenString), nil)
 	suite.router.ServeHTTP(suite.rec, req)
 

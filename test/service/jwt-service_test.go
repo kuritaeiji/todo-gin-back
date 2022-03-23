@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
+	"github.com/kuritaeiji/todo-gin-back/model"
 	"github.com/kuritaeiji/todo-gin-back/service"
 	"github.com/stretchr/testify/suite"
 )
@@ -27,7 +28,8 @@ func TestJWTService(t *testing.T) {
 func (suite *JWTServiceTestSuite) TestSuccessCreateJWT() {
 	id := 1
 	dayFromNow := 1
-	tokenString := suite.service.CreateJWT(id, dayFromNow)
+	user := model.User{ID: id}
+	tokenString := suite.service.CreateJWT(user, dayFromNow)
 	claim, _ := suite.service.VerifyJWT(tokenString)
 
 	suite.Equal(id, claim.ID)
@@ -37,7 +39,8 @@ func (suite *JWTServiceTestSuite) TestSuccessCreateJWT() {
 func (suite *JWTServiceTestSuite) TestSuccessVerifyJWT() {
 	id := 1
 	dayFromNow := 1
-	tokenString := suite.service.CreateJWT(id, dayFromNow)
+	user := model.User{ID: id}
+	tokenString := suite.service.CreateJWT(user, dayFromNow)
 	claim, err := suite.service.VerifyJWT(tokenString)
 
 	suite.Equal(id, claim.ID)
@@ -46,7 +49,7 @@ func (suite *JWTServiceTestSuite) TestSuccessVerifyJWT() {
 
 func (suite *JWTServiceTestSuite) TestBadVerifyJWTWithExpired() {
 	dayFromNow := -1
-	tokenString := suite.service.CreateJWT(1, dayFromNow)
+	tokenString := suite.service.CreateJWT(model.User{}, dayFromNow)
 	_, err := suite.service.VerifyJWT(tokenString)
 
 	suite.IsType(&jwt.ValidationError{}, err)

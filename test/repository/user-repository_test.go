@@ -83,3 +83,19 @@ func (suite *UserRepositoryTestSuite) TestSuccessActivate() {
 	suite.True(ruser.Activated)
 	suite.Nil(err)
 }
+
+func (suite *UserRepositoryTestSuite) TestSuccessFindByEmail() {
+	email := "user@example.com"
+	user := model.User{Email: email}
+	suite.db.Create(&user)
+	ruser, err := suite.userRepository.FindByEmail(email)
+
+	suite.Equal(user.ID, ruser.ID)
+	suite.Nil(err)
+}
+
+func (suite *UserRepositoryTestSuite) TestBadFindByEmailWithRecordNotFound() {
+	_, err := suite.userRepository.FindByEmail("mail")
+
+	suite.Equal(gorm.ErrRecordNotFound, err)
+}

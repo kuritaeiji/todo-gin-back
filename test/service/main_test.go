@@ -1,24 +1,14 @@
 package service_test
 
 import (
-	"net/http/httptest"
-	"testing"
-
-	"github.com/gin-gonic/gin"
-	"github.com/kuritaeiji/todo-gin-back/config"
-	"github.com/kuritaeiji/todo-gin-back/validators"
-	"github.com/stretchr/testify/assert"
+	"github.com/golang-jwt/jwt"
+	"github.com/kuritaeiji/todo-gin-back/service"
 )
 
 var (
-	assertion *assert.Assertions
-	ctx       *gin.Context
-	rec       *httptest.ResponseRecorder
+	email       = "user0@example.com"
+	password    = "Password1010"
+	tokenString = "tokenstring"
+	id          = 1
+	claim       = &service.UserClaim{id, jwt.StandardClaims{}}
 )
-
-func TestMain(m *testing.M) {
-	gin.SetMode(gin.TestMode)
-	config.Init()
-	validators.Init()
-	m.Run()
-}

@@ -11,7 +11,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
-	"github.com/golang-jwt/jwt"
 
 	"github.com/golang/mock/gomock"
 	"github.com/kuritaeiji/todo-gin-back/config"
@@ -41,16 +40,8 @@ func (suite *UserServiceTestSuite) SetupTest() {
 	suite.jwtServiceMock = mock_service.NewMockJWTService(gomock.NewController(suite.T()))
 	suite.service = service.TestNewUserService(suite.jwtServiceMock, suite.userRepositoryMock)
 	suite.rec = httptest.NewRecorder()
-	suite.ctx, _ = gin.CreateTestContext(rec)
+	suite.ctx, _ = gin.CreateTestContext(suite.rec)
 }
-
-var (
-	email       = "user0@example.com"
-	password    = "Password1010"
-	tokenString = "tokenstring"
-	id          = 1
-	claim       = &service.UserClaim{id, jwt.StandardClaims{}}
-)
 
 func TestUserServiceTest(t *testing.T) {
 	suite.Run(t, &UserServiceTestSuite{})

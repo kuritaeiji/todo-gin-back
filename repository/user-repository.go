@@ -14,6 +14,7 @@ type UserRepository interface {
 	IsUnique(email string) (bool, error)
 	Activate(user *model.User) error
 	Find(id int) (model.User, error)
+	FindByEmail(email string) (model.User, error)
 }
 
 type userRepository struct {
@@ -52,6 +53,16 @@ func (r *userRepository) Find(id int) (model.User, error) {
 	err := r.db.Where("id = ?", id).First(&user).Error
 	if err != nil {
 		return user, err
+	}
+
+	return user, nil
+}
+
+func (r *userRepository) FindByEmail(email string) (model.User, error) {
+	var user model.User
+	err := r.db.Where("email = ?", email).First(&user).Error
+	if err != nil {
+		return model.User{}, err
 	}
 
 	return user, nil
