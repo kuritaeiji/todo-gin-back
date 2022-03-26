@@ -140,7 +140,7 @@ func (suite *UserRequestTestSuite) TestSuccessUnique() {
 }
 
 func (suite *UserRequestTestSuite) TestBadIsUniqueWithNotGuest() {
-	req := httptest.NewRequest("POST", "/users/unique", nil)
+	req := httptest.NewRequest("GET", "/users/unique", nil)
 	req.Header.Add("Authorization", "Bearer token")
 	suite.router.ServeHTTP(suite.rec, req)
 
