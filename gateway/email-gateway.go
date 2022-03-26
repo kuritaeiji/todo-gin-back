@@ -4,9 +4,11 @@ package gateway
 
 import (
 	"os"
+	"time"
 
 	"github.com/sendgrid/sendgrid-go"
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
+	"gopkg.in/matryer/try.v1"
 )
 
 type EmailGateway interface {
@@ -28,6 +30,10 @@ func NewEmailGateway() EmailGateway {
 func (gateway *emailGateway) Send(to, subject, htmlString string) error {
 	toMail := mail.NewEmail("", to)
 	message := mail.NewSingleEmail(gateway.fromMail, subject, toMail, "", htmlString)
-	_, err := gateway.client.Send(message)
+	err := try.Do(func(attempt int) (bool, error) {
+		time.Sleep(time.Duration(attempt) * time.Second)
+		_, err := gateway.client.Send(message)
+		return attempt < 5, err
+	})
 	return err
 }
