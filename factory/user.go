@@ -1,6 +1,10 @@
 package factory
 
 import (
+	"encoding/json"
+	"io"
+	"strings"
+
 	"github.com/kuritaeiji/todo-gin-back/db"
 	"github.com/kuritaeiji/todo-gin-back/dto"
 	"github.com/kuritaeiji/todo-gin-back/model"
@@ -14,15 +18,24 @@ type UserConfig struct {
 	Activated bool
 }
 
-func NewUser(config UserConfig) model.User {
+const (
+	DefaultEmail    = "user@example.com"
+	DefualtPassword = "Password1010"
+)
+
+func NewDtoUser(config UserConfig) dto.User {
 	if config.Email == "" {
-		config.Email = "user@example.com"
+		config.Email = DefaultEmail
 	}
 	if config.Password == "" {
-		config.Password = "Password1010"
+		config.Password = DefualtPassword
 	}
 
-	dtoUser := dto.User{Email: config.Email, Password: config.Password}
+	return dto.User{Email: config.Email, Password: config.Password}
+}
+
+func NewUser(config UserConfig) model.User {
+	dtoUser := NewDtoUser(config)
 	var user model.User
 	dtoUser.Transfer(&user)
 	user.ID = config.ID
@@ -39,4 +52,13 @@ func CreateUser(config UserConfig) model.User {
 
 func CreateAccessToken(user model.User) string {
 	return service.NewJWTService().CreateJWT(user, service.DayFromNowAccessToken)
+}
+
+func CreateUserRequestBody(email, password string) io.Reader {
+	body := map[string]string{
+		"email":    email,
+		"password": password,
+	}
+	bodyBytes, _ := json.Marshal(body)
+	return strings.NewReader(string(bodyBytes))
 }

@@ -10,8 +10,8 @@ type User struct {
 	Password string `json:"password" binding:"required,min=8,max=50,password"`
 }
 
-func (userProxy User) Transfer(user *model.User) {
-	user.Email = userProxy.Email
-	digestByte, _ := bcrypt.GenerateFromPassword([]byte(userProxy.Password), bcrypt.DefaultCost)
+func (dtoUser User) Transfer(user *model.User) {
+	user.Email = dtoUser.Email
+	digestByte, _ := bcrypt.GenerateFromPassword([]byte(dtoUser.Password), bcrypt.DefaultCost)
 	user.PasswordDigest = string(digestByte)
 }
