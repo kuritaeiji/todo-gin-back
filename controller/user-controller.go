@@ -40,6 +40,13 @@ func (c *userController) Create(ctx *gin.Context) {
 		ctx.JSON(config.EmailClientErrorResponse.Code, config.EmailClientErrorResponse.Json)
 		return
 	}
+
+	if err != nil {
+		ctx.AbortWithStatus(500)
+		gin.DefaultWriter.Write([]byte(err.Error()))
+		return
+	}
+
 	ctx.Status(200)
 }
 

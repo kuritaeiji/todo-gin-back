@@ -69,6 +69,17 @@ func (suite *UserControllerTestSuite) TestBadCreateWithNotUniqueUser() {
 	suite.Contains(suite.rec.Body.String(), config.UniqueUserErrorResponse.Json["content"])
 }
 
+func (suite *UserControllerTestSuite) TestBadCreateWithnEmailClientError() {
+	err := config.EmailClientError
+	var user model.User
+	suite.userServiceMock.EXPECT().Create(suite.ctx).Return(user, nil)
+	suite.emailServiceMock.EXPECT().ActivationUserEmail(user).Return(err)
+	suite.controller.Create(suite.ctx)
+
+	suite.Equal(config.EmailClientErrorResponse.Code, suite.rec.Code)
+	suite.Contains(suite.rec.Body.String(), config.EmailClientErrorResponse.Json["content"])
+}
+
 func (suite *UserControllerTestSuite) TestTrueIsUnique() {
 	suite.userServiceMock.EXPECT().IsUnique(suite.ctx).Return(true, nil)
 	suite.controller.IsUnique(suite.ctx)

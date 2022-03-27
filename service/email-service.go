@@ -35,7 +35,7 @@ func (s *emailService) ActivationUserEmail(user model.User) error {
 	err := s.gateway.Send(user.Email, "アカウント有効化リンク", s.activationHTML(user))
 	if err != nil {
 		gin.DefaultWriter.Write([]byte(fmt.Sprintf("Failed to send activation user email\n%v", err.Error())))
-		return err
+		return config.EmailClientError
 	}
 	return nil
 }

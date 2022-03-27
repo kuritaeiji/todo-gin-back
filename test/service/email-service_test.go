@@ -59,5 +59,5 @@ func (suite *EmailServiceTestSuite) TestBadActivationUserEmailWithEmailGatewayEr
 	suite.emailGatewayMock.EXPECT().Send(user.Email, "アカウント有効化リンク", gomock.Any()).Return(err)
 	rerr := suite.service.ActivationUserEmail(user)
 
-	suite.Error(rerr)
+	suite.Equal(config.EmailClientError, rerr)
 }

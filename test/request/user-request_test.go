@@ -2,7 +2,6 @@ package request_test
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http/httptest"
 	"os"
@@ -125,8 +124,7 @@ func (suite *UserRequestTestSuite) TestBadCreateWithEmailClientError() {
 	}
 	req := httptest.NewRequest("POST", "/users", strings.NewReader(string(bodyJson)))
 	req.Header.Add("Content-Type", binding.MIMEJSON)
-	err = errors.New("email client error")
-	suite.mock.EXPECT().Send(email, "アカウント有効化リンク", gomock.Any()).Return(err)
+	suite.mock.EXPECT().Send(email, "アカウント有効化リンク", gomock.Any()).Return(config.EmailClientError)
 	suite.router.ServeHTTP(suite.rec, req)
 
 	suite.Equal(config.EmailClientErrorResponse.Code, suite.rec.Code)

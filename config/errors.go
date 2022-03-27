@@ -10,6 +10,7 @@ var (
 	UniqueUserError             = errors.New("not unique user")
 	AlreadyActivatedUserError   = errors.New("alreay activated user")
 	PasswordAuthenticationError = errors.New("password is not authenticated")
+	EmailClientError            = errors.New("email client error")
 )
 
 type ErrorResponse struct {
@@ -50,7 +51,7 @@ var (
 
 	EmailClientErrorResponse = ErrorResponse{
 		Code: 500,
-		Json: createJson("email client error"),
+		Json: createJson(EmailClientError.Error()),
 	}
 
 	PasswordAuthenticationErrorResponse = ErrorResponse{
