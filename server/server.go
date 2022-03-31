@@ -15,6 +15,7 @@ func Init() {
 
 func RouterSetup(userController controller.UserController) *gin.Engine {
 	r := gin.Default()
+	r.Use(middleware.NewCorsMiddleware())
 
 	api := r.Group("/api")
 
