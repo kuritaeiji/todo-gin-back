@@ -1,0 +1,46 @@
+version: 2.1
+
+orbs: 
+  heroku: circleci/heroku@1.2.6
+
+jobs:
+  build_and_test:
+    docker:
+      - image: golang:1.17.2
+        environment:
+          TODO_GIN_WORKDIR: /root/project
+      - image: mysql:5.7
+        environment:
+          MYSQL_DATABASE: app-test
+          MYSQL_ROOT_PASSWORD: password
+          MYSQL_ROOT_HOST: "%"
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - go-modules-{{ checksum "go.sum" }}
+      - run: go mod download
+      - save_cache:
+          paths:
+            - "/go/pkg/mod"
+          key: go-modules-{{ checksum "go.sum" }}
+      - run: sleep 30
+      - run: pwd
+      - run: go test -v ./...
+  deploy:
+    executor: heroku/default
+    steps:
+      - checkout
+      - heroku/install
+      - heroku/deploy-via-git
+
+workflows:
+  build_and_deploy:
+    jobs:
+      - build_and_test
+      - deploy:
+          requires:
+              - build_and_test
+          filters:
+            branches:
+              only: master
