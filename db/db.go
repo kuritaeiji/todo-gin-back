@@ -28,9 +28,7 @@ func Init() {
 		os.Getenv("MYSQL_DATABASE"),
 	)
 	logLevelInt, _ := strconv.Atoi(os.Getenv("MYSQL_LOG_LEVEL"))
-	if db != nil {
-		initDB(dsn, logger.LogLevel(logLevelInt))
-	}
+	initDB(dsn, logger.LogLevel(logLevelInt))
 }
 
 func initDB(dsn string, logLevel logger.LogLevel) {
