@@ -1,6 +1,7 @@
 package controller_test
 
 import (
+	"errors"
 	"net/http/httptest"
 	"testing"
 
@@ -129,4 +130,17 @@ func (suite *UserControllerTestSuite) TestBadActivateWithAlreadyActivatedUser() 
 	suite.controller.Activate(suite.ctx)
 	suite.Equal(config.AlreadyActivatedUserErrorResponse.Code, suite.rec.Code)
 	suite.Contains(suite.rec.Body.String(), config.AlreadyActivatedUserErrorResponse.Json["content"])
+}
+
+func (suite *UserControllerTestSuite) TestSuccessDestroy() {
+	suite.userServiceMock.EXPECT().Destroy(suite.ctx).Return(nil)
+	suite.controller.Destroy(suite.ctx)
+	suite.Equal(200, suite.rec.Code)
+}
+
+func (suite *UserControllerTestSuite) TestBadDestroyWithError() {
+	err := errors.New("error")
+	suite.userServiceMock.EXPECT().Destroy(suite.ctx).Return(err)
+	suite.controller.Destroy(suite.ctx)
+	suite.Equal(500, suite.rec.Code)
 }

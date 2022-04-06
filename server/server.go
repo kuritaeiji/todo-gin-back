@@ -32,6 +32,12 @@ func RouterSetup(userController controller.UserController) *gin.Engine {
 		}
 	}
 
+	auth := api.Group("")
+	{
+		auth.Use(authMiddleware.Auth)
+		auth.DELETE("/users", userController.Destroy)
+	}
+
 	return r
 }
 

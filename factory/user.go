@@ -2,6 +2,7 @@ package factory
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"strings"
 
@@ -23,9 +24,12 @@ const (
 	DefualtPassword = "Password1010"
 )
 
+var emailCount = 1
+
 func NewDtoUser(config UserConfig) dto.User {
 	if config.Email == "" {
-		config.Email = DefaultEmail
+		config.Email = fmt.Sprintf("%v%v", emailCount, DefaultEmail)
+		emailCount++
 	}
 	if config.Password == "" {
 		config.Password = DefualtPassword

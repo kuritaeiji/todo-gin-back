@@ -10,9 +10,10 @@ import (
 )
 
 type UserController interface {
-	Create(ctx *gin.Context)
-	IsUnique(ctx *gin.Context)
-	Activate(ctx *gin.Context)
+	Create(ctx *gin.Context)   // POST /users
+	IsUnique(ctx *gin.Context) // GET /users/unique?email="email"
+	Activate(ctx *gin.Context) // PUT /users/activate?token="token"
+	Destroy(ctx *gin.Context)  // DELETE /users/:id
 }
 
 type userController struct {
@@ -87,6 +88,18 @@ func (c *userController) Activate(ctx *gin.Context) {
 		ctx.JSON(config.AlreadyActivatedUserErrorResponse.Code, config.AlreadyActivatedUserErrorResponse.Json)
 		return
 	}
+
+	if err != nil {
+		ctx.AbortWithStatus(500)
+		gin.DefaultWriter.Write([]byte(err.Error()))
+		return
+	}
+
+	ctx.Status(200)
+}
+
+func (c *userController) Destroy(ctx *gin.Context) {
+	err := c.service.Destroy(ctx)
 
 	if err != nil {
 		ctx.AbortWithStatus(500)

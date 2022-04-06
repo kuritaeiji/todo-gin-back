@@ -123,6 +123,6 @@ func (suite *UserDtoTestSuite) TestTransfer() {
 	var user model.User
 	suite.dto.Transfer(&user)
 
-	suite.Equal(factory.DefaultEmail, user.Email)
+	suite.Contains(user.Email, factory.DefaultEmail)
 	suite.True(user.Authenticate(factory.DefualtPassword))
 }

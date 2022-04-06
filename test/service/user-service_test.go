@@ -14,6 +14,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/kuritaeiji/todo-gin-back/config"
+	"github.com/kuritaeiji/todo-gin-back/factory"
 	"github.com/kuritaeiji/todo-gin-back/mock_repository"
 	"github.com/kuritaeiji/todo-gin-back/mock_service"
 	"github.com/kuritaeiji/todo-gin-back/model"
@@ -181,4 +182,21 @@ func (suite *UserServiceTestSuite) TestBadActivateWithDBError() {
 	rerr := suite.service.Activate(suite.ctx)
 
 	suite.Equal(err, rerr)
+}
+
+func (suite *UserServiceTestSuite) TestSuccessDestroy() {
+	currentUser := factory.NewUser(factory.UserConfig{})
+	suite.ctx.Set("currentUser", currentUser)
+	suite.userRepositoryMock.EXPECT().Destroy(&currentUser).Return(nil)
+	err := suite.service.Destroy(suite.ctx)
+	suite.Nil(err)
+}
+
+func (suite *UserServiceTestSuite) TestBadDestroyWithRepositoryReturnsError() {
+	currentUser := factory.NewUser(factory.UserConfig{})
+	suite.ctx.Set("currentUser", currentUser)
+	err := errors.New("error")
+	suite.userRepositoryMock.EXPECT().Destroy(&currentUser).Return(err)
+	returnErr := suite.service.Destroy(suite.ctx)
+	suite.Equal(err, returnErr)
 }

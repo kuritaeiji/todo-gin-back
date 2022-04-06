@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kuritaeiji/todo-gin-back/config"
 	"github.com/kuritaeiji/todo-gin-back/db"
+	"github.com/kuritaeiji/todo-gin-back/factory"
 	"github.com/kuritaeiji/todo-gin-back/model"
 	"github.com/kuritaeiji/todo-gin-back/repository"
 	"github.com/stretchr/testify/suite"
@@ -98,4 +99,23 @@ func (suite *UserRepositoryTestSuite) TestBadFindByEmailWithRecordNotFound() {
 	_, err := suite.userRepository.FindByEmail("mail")
 
 	suite.Equal(gorm.ErrRecordNotFound, err)
+}
+
+func (suite *UserRepositoryTestSuite) TestSuccessDestroy() {
+	user := factory.CreateUser(factory.UserConfig{})
+	var count int64
+	suite.db.Model(&model.User{}).Count(&count)
+	suite.Equal(int64(1), count)
+	err := suite.userRepository.Destroy(&user)
+
+	suite.Nil(err)
+	suite.db.Model(&model.User{}).Count(&count)
+	suite.Equal(int64(0), count)
+}
+
+func (suite *UserRepositoryTestSuite) TestBadDestroyWithDBError() {
+	user := factory.NewUser(factory.UserConfig{})
+	err := suite.userRepository.Destroy(&user)
+
+	suite.Error(err)
 }
