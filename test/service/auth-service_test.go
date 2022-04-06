@@ -1,16 +1,14 @@
 package service_test
 
 import (
-	"encoding/json"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/golang/mock/gomock"
 	"github.com/kuritaeiji/todo-gin-back/config"
-	"github.com/kuritaeiji/todo-gin-back/dto"
+	"github.com/kuritaeiji/todo-gin-back/factory"
 	"github.com/kuritaeiji/todo-gin-back/mock_repository"
 	"github.com/kuritaeiji/todo-gin-back/mock_service"
 	"github.com/kuritaeiji/todo-gin-back/model"
@@ -45,15 +43,12 @@ func TestAuthService(t *testing.T) {
 }
 
 func (suite *AuthServiceTestSuite) TestSuccessLogin() {
-	var user model.User
-	dtoUser := dto.User{Email: email, Password: password}
-	dtoUser.Transfer(&user)
-	suite.userRepositoryMock.EXPECT().FindByEmail(email).Return(user, nil)
+	user := factory.NewUser(factory.UserConfig{})
+	tokenString := factory.CreateAccessToken(user)
+	suite.userRepositoryMock.EXPECT().FindByEmail(user.Email).Return(user, nil)
 	suite.jwtServiceMock.EXPECT().CreateJWT(user, service.DayFromNowAccessToken).Return(tokenString)
 
-	body := map[string]string{"email": email, "password": password}
-	bodyBytes, _ := json.Marshal(body)
-	req := httptest.NewRequest("POST", "/login", strings.NewReader(string(bodyBytes)))
+	req := httptest.NewRequest("POST", "/login", factory.CreateUserRequestBody(factory.UserConfig{Email: user.Email}))
 	req.Header.Add("Content-Type", binding.MIMEJSON)
 	suite.ctx.Request = req
 	token, err := suite.service.Login(suite.ctx)
@@ -72,26 +67,22 @@ func (suite *AuthServiceTestSuite) TestBadLoginWithCannotBind() {
 }
 
 func (suite *AuthServiceTestSuite) TestBadLoginWithRecordNotFound() {
-	suite.userRepositoryMock.EXPECT().FindByEmail(email).Return(model.User{}, gorm.ErrRecordNotFound)
-	body := map[string]string{
-		"email": email,
-	}
-	bodyBytes, _ := json.Marshal(body)
-	req := httptest.NewRequest("POST", "/login", strings.NewReader(string(bodyBytes)))
+	req := httptest.NewRequest("POST", "/login", factory.CreateUserRequestBody(factory.UserConfig{}))
 	req.Header.Add("Content-Type", binding.MIMEJSON)
 	suite.ctx.Request = req
+	suite.userRepositoryMock.EXPECT().FindByEmail(gomock.Any()).Return(model.User{}, gorm.ErrRecordNotFound).Do(func(email string) {
+		suite.Contains(email, factory.DefaultEmail)
+	})
 	_, err := suite.service.Login(suite.ctx)
 
 	suite.Equal(gorm.ErrRecordNotFound, err)
 }
 
 func (suite *AuthServiceTestSuite) TestBadLoginWithPasswordAuthenticationError() {
-	user := model.User{Email: email, PasswordDigest: password}
-	suite.userRepositoryMock.EXPECT().FindByEmail(email).Return(user, nil)
+	user := factory.NewUser(factory.UserConfig{})
+	suite.userRepositoryMock.EXPECT().FindByEmail(user.Email).Return(user, nil)
 
-	body := map[string]string{"email": email, "password": password}
-	bodyBytes, _ := json.Marshal(body)
-	req := httptest.NewRequest("POST", "/login", strings.NewReader(string(bodyBytes)))
+	req := httptest.NewRequest("POST", "/login", factory.CreateUserRequestBody(factory.UserConfig{Email: user.Email, Password: "invalid password"}))
 	req.Header.Add("Content-Type", binding.MIMEJSON)
 	suite.ctx.Request = req
 	_, err := suite.service.Login(suite.ctx)

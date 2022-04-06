@@ -6,6 +6,7 @@ import (
 	"io"
 	"strings"
 
+	"github.com/golang-jwt/jwt"
 	"github.com/kuritaeiji/todo-gin-back/db"
 	"github.com/kuritaeiji/todo-gin-back/dto"
 	"github.com/kuritaeiji/todo-gin-back/model"
@@ -13,10 +14,11 @@ import (
 )
 
 type UserConfig struct {
-	ID        int
-	Email     string
-	Password  string
-	Activated bool
+	ID                   int
+	Email                string
+	Password             string
+	Activated            bool
+	IsNotUseDefaultValue bool
 }
 
 const (
@@ -26,7 +28,11 @@ const (
 
 var emailCount = 1
 
-func NewDtoUser(config UserConfig) dto.User {
+func (config *UserConfig) setDefaultValue() {
+	if config.IsNotUseDefaultValue {
+		return
+	}
+
 	if config.Email == "" {
 		config.Email = fmt.Sprintf("%v%v", emailCount, DefaultEmail)
 		emailCount++
@@ -34,7 +40,10 @@ func NewDtoUser(config UserConfig) dto.User {
 	if config.Password == "" {
 		config.Password = DefualtPassword
 	}
+}
 
+func NewDtoUser(config UserConfig) dto.User {
+	config.setDefaultValue()
 	return dto.User{Email: config.Email, Password: config.Password}
 }
 
@@ -58,10 +67,18 @@ func CreateAccessToken(user model.User) string {
 	return service.NewJWTService().CreateJWT(user, service.DayFromNowAccessToken)
 }
 
-func CreateUserRequestBody(email, password string) io.Reader {
+func CreateUserClaim(user model.User) service.UserClaim {
+	return service.UserClaim{
+		ID:             user.ID,
+		StandardClaims: jwt.StandardClaims{},
+	}
+}
+
+func CreateUserRequestBody(config UserConfig) io.Reader {
+	config.setDefaultValue()
 	body := map[string]string{
-		"email":    email,
-		"password": password,
+		"email":    config.Email,
+		"password": config.Password,
 	}
 	bodyBytes, _ := json.Marshal(body)
 	return strings.NewReader(string(bodyBytes))
