@@ -11,8 +11,9 @@ import (
 
 type UserRepository interface {
 	Create(user *model.User) error
-	IsUnique(email string) (bool, error)
 	Activate(user *model.User) error
+	Destroy(user *model.User) error
+	IsUnique(email string) (bool, error)
 	Find(id int) (model.User, error)
 	FindByEmail(email string) (model.User, error)
 }
@@ -34,6 +35,15 @@ func (r *userRepository) Create(user *model.User) error {
 	return r.db.Create(&user).Error
 }
 
+func (r *userRepository) Activate(user *model.User) error {
+	user.Activated = true
+	return r.db.Save(user).Error
+}
+
+func (r *userRepository) Destroy(user *model.User) error {
+	return r.db.Delete(user).Error
+}
+
 func (r *userRepository) IsUnique(email string) (bool, error) {
 	var count int64
 	err := r.db.Model(model.User{}).Where("email = ?", email).Count(&count).Error
@@ -41,11 +51,6 @@ func (r *userRepository) IsUnique(email string) (bool, error) {
 		return false, err
 	}
 	return count == 0, nil
-}
-
-func (r *userRepository) Activate(user *model.User) error {
-	user.Activated = true
-	return r.db.Save(user).Error
 }
 
 func (r *userRepository) Find(id int) (model.User, error) {

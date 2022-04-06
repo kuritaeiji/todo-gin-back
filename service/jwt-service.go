@@ -51,6 +51,10 @@ func (s *jwtService) VerifyJWT(tokenString string) (*UserClaim, error) {
 		return s.key, nil
 	})
 
+	if err != nil {
+		return &UserClaim{}, err
+	}
+
 	if claim, ok := token.Claims.(*UserClaim); ok && token.Valid {
 		return claim, nil
 	}

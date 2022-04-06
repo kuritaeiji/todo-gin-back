@@ -26,7 +26,7 @@ func (suite *UserDtoTestSuite) SetupSuite() {
 }
 
 func (suite *UserDtoTestSuite) SetupTest() {
-	suite.dto = factory.NewDtoUser(factory.UserConfig{})
+	suite.dto = factory.NewDtoUser(&factory.UserConfig{})
 	suite.ctx, _ = gin.CreateTestContext(httptest.NewRecorder())
 }
 
@@ -35,15 +35,18 @@ func TestUserDto(t *testing.T) {
 }
 
 func (suite *UserDtoTestSuite) TestSuccessValidation() {
-	req := httptest.NewRequest("POST", "/users", factory.CreateUserRequestBody(factory.DefaultEmail, factory.DefualtPassword))
+	req := httptest.NewRequest("POST", "/users", factory.CreateUserRequestBody(&factory.UserConfig{}))
 	suite.ctx.Request = req
 	err := suite.ctx.ShouldBindJSON(&suite.dto)
+
+	verr, _ := err.(validator.ValidationErrors)
+	println(verr.Error())
 
 	suite.Nil(err)
 }
 
 func (suite *UserDtoTestSuite) TestBadRequiredEmailValidation() {
-	req := httptest.NewRequest("POST", "/users", factory.CreateUserRequestBody("", factory.DefualtPassword))
+	req := httptest.NewRequest("POST", "/users", factory.CreateUserRequestBody(&factory.UserConfig{NotUseDefaultValue: true, Email: ""}))
 	suite.ctx.Request = req
 	err := suite.ctx.ShouldBindJSON(&suite.dto)
 
@@ -52,7 +55,7 @@ func (suite *UserDtoTestSuite) TestBadRequiredEmailValidation() {
 }
 
 func (suite *UserDtoTestSuite) TestBadMax100EmailValidation() {
-	body := factory.CreateUserRequestBody("email@"+strings.Repeat("a", 91)+".com", factory.DefualtPassword)
+	body := factory.CreateUserRequestBody(&factory.UserConfig{Email: "email@" + strings.Repeat("a", 91) + ".com"})
 	req := httptest.NewRequest("POST", "/users", body)
 	suite.ctx.Request = req
 	err := suite.ctx.ShouldBindJSON(&suite.dto)
@@ -62,7 +65,7 @@ func (suite *UserDtoTestSuite) TestBadMax100EmailValidation() {
 }
 
 func (suite *UserDtoTestSuite) TestBadEmailValidation() {
-	body := factory.CreateUserRequestBody("email", factory.DefualtPassword)
+	body := factory.CreateUserRequestBody(&factory.UserConfig{Email: "email"})
 	req := httptest.NewRequest("POST", "/users", body)
 	suite.ctx.Request = req
 	err := suite.ctx.ShouldBindJSON(&suite.dto)
@@ -72,7 +75,7 @@ func (suite *UserDtoTestSuite) TestBadEmailValidation() {
 }
 
 func (suite *UserDtoTestSuite) TestBadMin8PasswordValidation() {
-	body := factory.CreateUserRequestBody(factory.DefualtPassword, "Pass101")
+	body := factory.CreateUserRequestBody(&factory.UserConfig{Password: "Pas101"})
 	req := httptest.NewRequest("POST", "/users", body)
 	suite.ctx.Request = req
 	err := suite.ctx.ShouldBindJSON(&suite.dto)
@@ -82,7 +85,7 @@ func (suite *UserDtoTestSuite) TestBadMin8PasswordValidation() {
 }
 
 func (suite *UserDtoTestSuite) TestBadMax50PasswordValidation() {
-	body := factory.CreateUserRequestBody(factory.DefualtPassword, strings.Repeat("a", 51))
+	body := factory.CreateUserRequestBody(&factory.UserConfig{Password: strings.Repeat("a", 51)})
 	req := httptest.NewRequest("POST", "/users", body)
 	suite.ctx.Request = req
 	err := suite.ctx.ShouldBindJSON(&suite.dto)
@@ -91,7 +94,7 @@ func (suite *UserDtoTestSuite) TestBadMax50PasswordValidation() {
 	suite.Contains(err.Error(), "max")
 }
 func (suite *UserDtoTestSuite) TestBadPasswordValidationWithNotHaveUppercase() {
-	body := factory.CreateUserRequestBody(factory.DefualtPassword, "password1010")
+	body := factory.CreateUserRequestBody(&factory.UserConfig{Password: "password1010"})
 	req := httptest.NewRequest("POST", "/users", body)
 	suite.ctx.Request = req
 	err := suite.ctx.ShouldBindJSON(&suite.dto)
@@ -100,7 +103,7 @@ func (suite *UserDtoTestSuite) TestBadPasswordValidationWithNotHaveUppercase() {
 	suite.Contains(err.Error(), "password")
 }
 func (suite *UserDtoTestSuite) TestBadPasswordValidationWithNotHaveUndercase() {
-	body := factory.CreateUserRequestBody(factory.DefualtPassword, "PASSWORD1010")
+	body := factory.CreateUserRequestBody(&factory.UserConfig{Password: "PASSWORD1010"})
 	req := httptest.NewRequest("POST", "/users", body)
 	suite.ctx.Request = req
 	err := suite.ctx.ShouldBindJSON(&suite.dto)
@@ -110,7 +113,7 @@ func (suite *UserDtoTestSuite) TestBadPasswordValidationWithNotHaveUndercase() {
 }
 
 func (suite *UserDtoTestSuite) TestBadPasswordValidationWithNotHaveNumber() {
-	body := factory.CreateUserRequestBody(factory.DefualtPassword, "Password")
+	body := factory.CreateUserRequestBody(&factory.UserConfig{Password: "Password"})
 	req := httptest.NewRequest("POST", "/users", body)
 	suite.ctx.Request = req
 	err := suite.ctx.ShouldBindJSON(&suite.dto)
@@ -123,6 +126,6 @@ func (suite *UserDtoTestSuite) TestTransfer() {
 	var user model.User
 	suite.dto.Transfer(&user)
 
-	suite.Equal(factory.DefaultEmail, user.Email)
+	suite.Contains(user.Email, factory.DefaultEmail)
 	suite.True(user.Authenticate(factory.DefualtPassword))
 }

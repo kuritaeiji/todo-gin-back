@@ -1,7 +1,6 @@
 package service_test
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http/httptest"
@@ -14,6 +13,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/kuritaeiji/todo-gin-back/config"
+	"github.com/kuritaeiji/todo-gin-back/factory"
 	"github.com/kuritaeiji/todo-gin-back/mock_repository"
 	"github.com/kuritaeiji/todo-gin-back/mock_service"
 	"github.com/kuritaeiji/todo-gin-back/model"
@@ -50,23 +50,19 @@ func TestUserServiceTest(t *testing.T) {
 }
 
 func (suite *UserServiceTestSuite) TestSuccessCreate() {
-	body := map[string]string{
-		"email":    email,
-		"password": password,
-	}
-	bodyBytes, _ := json.Marshal(body)
-	req := httptest.NewRequest("POST", "/users", strings.NewReader(string(bodyBytes)))
+	var userConfig factory.UserConfig
+	req := httptest.NewRequest("POST", "/users", factory.CreateUserRequestBody(&userConfig))
 	req.Header.Add("Content-Type", binding.MIMEJSON)
 	suite.ctx.Request = req
 	suite.userRepositoryMock.EXPECT().Create(gomock.Any()).Return(nil).Do(func(user *model.User) {
-		suite.Equal(email, user.Email)
-		suite.Nil(bcrypt.CompareHashAndPassword([]byte(user.PasswordDigest), []byte(password)))
+		suite.Equal(userConfig.Email, user.Email)
+		suite.Nil(bcrypt.CompareHashAndPassword([]byte(user.PasswordDigest), []byte(factory.DefualtPassword)))
 	})
 	user, err := suite.service.Create(suite.ctx)
 
 	suite.Nil(err)
-	suite.Equal(email, user.Email)
-	suite.Nil(bcrypt.CompareHashAndPassword([]byte(user.PasswordDigest), []byte(password)))
+	suite.Contains(user.Email, factory.DefaultEmail)
+	suite.Nil(bcrypt.CompareHashAndPassword([]byte(user.PasswordDigest), []byte(factory.DefualtPassword)))
 }
 
 func (suite *UserServiceTestSuite) TestBadCreateWithValidation() {
@@ -78,18 +74,14 @@ func (suite *UserServiceTestSuite) TestBadCreateWithValidation() {
 }
 
 func (suite *UserServiceTestSuite) TestBadCreateWithDBError() {
-	body := map[string]string{
-		"email":    email,
-		"password": password,
-	}
-	bodyBytes, _ := json.Marshal(body)
-	req := httptest.NewRequest("POST", "/users", strings.NewReader(string(bodyBytes)))
+	var userConfig factory.UserConfig
+	req := httptest.NewRequest("POST", "/users", factory.CreateUserRequestBody(&userConfig))
 	req.Header.Add("Content-Type", binding.MIMEJSON)
 	suite.ctx.Request = req
 	err := errors.New("error")
 	suite.userRepositoryMock.EXPECT().Create(gomock.Any()).Return(err).Do(func(user *model.User) {
-		suite.Equal(email, user.Email)
-		suite.Nil(bcrypt.CompareHashAndPassword([]byte(user.PasswordDigest), []byte(password)))
+		suite.Equal(userConfig.Email, user.Email)
+		suite.Nil(bcrypt.CompareHashAndPassword([]byte(user.PasswordDigest), []byte(factory.DefualtPassword)))
 	})
 	_, rerr := suite.service.Create(suite.ctx)
 
@@ -97,9 +89,9 @@ func (suite *UserServiceTestSuite) TestBadCreateWithDBError() {
 }
 
 func (suite *UserServiceTestSuite) TestTrueIsUnique() {
-	req := httptest.NewRequest("GET", fmt.Sprintf("/users/unique?email=%v", email), nil)
+	req := httptest.NewRequest("GET", fmt.Sprintf("/users/unique?email=%v", factory.DefaultEmail), nil)
 	suite.ctx.Request = req
-	suite.userRepositoryMock.EXPECT().IsUnique(email).Return(true, nil)
+	suite.userRepositoryMock.EXPECT().IsUnique(factory.DefaultEmail).Return(true, nil)
 	result, err := suite.service.IsUnique(suite.ctx)
 
 	suite.True(result)
@@ -107,9 +99,9 @@ func (suite *UserServiceTestSuite) TestTrueIsUnique() {
 }
 
 func (suite *UserServiceTestSuite) TestFalseIsUnique() {
-	req := httptest.NewRequest("GET", fmt.Sprintf("/users/unique?email=%v", email), nil)
+	req := httptest.NewRequest("GET", fmt.Sprintf("/users/unique?email=%v", factory.DefaultEmail), nil)
 	suite.ctx.Request = req
-	suite.userRepositoryMock.EXPECT().IsUnique(email).Return(false, nil)
+	suite.userRepositoryMock.EXPECT().IsUnique(factory.DefaultEmail).Return(false, nil)
 	result, err := suite.service.IsUnique(suite.ctx)
 
 	suite.False(result)
@@ -117,9 +109,9 @@ func (suite *UserServiceTestSuite) TestFalseIsUnique() {
 }
 
 func (suite *UserServiceTestSuite) TestBadIsUniqueWithDBError() {
-	req := httptest.NewRequest("GET", fmt.Sprintf("/users/unique?email=%v", email), nil)
+	req := httptest.NewRequest("GET", fmt.Sprintf("/users/unique?email=%v", factory.DefaultEmail), nil)
 	suite.ctx.Request = req
-	suite.userRepositoryMock.EXPECT().IsUnique(email).Return(false, errors.New("db error"))
+	suite.userRepositoryMock.EXPECT().IsUnique(factory.DefaultEmail).Return(false, errors.New("db error"))
 	result, err := suite.service.IsUnique(suite.ctx)
 
 	suite.False(result)
@@ -128,8 +120,10 @@ func (suite *UserServiceTestSuite) TestBadIsUniqueWithDBError() {
 
 func (suite *UserServiceTestSuite) TestSuccessActivate() {
 	user := model.User{}
-	suite.jwtServiceMock.EXPECT().VerifyJWT(tokenString).Return(claim, nil)
-	suite.userRepositoryMock.EXPECT().Find(id).Return(user, nil)
+	tokenString := factory.CreateAccessToken(user)
+	claim := factory.CreateUserClaim(user)
+	suite.jwtServiceMock.EXPECT().VerifyJWT(tokenString).Return(&claim, nil)
+	suite.userRepositoryMock.EXPECT().Find(claim.ID).Return(user, nil)
 	suite.userRepositoryMock.EXPECT().Activate(&user).Return(nil)
 
 	req := httptest.NewRequest("PUT", fmt.Sprintf("/users/activate?token=%v", tokenString), nil)
@@ -141,7 +135,8 @@ func (suite *UserServiceTestSuite) TestSuccessActivate() {
 
 func (suite *UserServiceTestSuite) TestBadActivateWithJWTValidationError() {
 	err := errors.New("jwt validation error")
-	suite.jwtServiceMock.EXPECT().VerifyJWT(tokenString).Return(claim, err)
+	tokenString := "tokenString"
+	suite.jwtServiceMock.EXPECT().VerifyJWT(tokenString).Return(nil, err)
 	req := httptest.NewRequest("PUT", fmt.Sprintf("/users/activate?token=%v", tokenString), nil)
 	suite.ctx.Request = req
 	rerr := suite.service.Activate(suite.ctx)
@@ -151,7 +146,9 @@ func (suite *UserServiceTestSuite) TestBadActivateWithJWTValidationError() {
 
 func (suite *UserServiceTestSuite) TestBadActivateWithRecordNotFound() {
 	err := errors.New("record not found")
-	suite.jwtServiceMock.EXPECT().VerifyJWT(tokenString).Return(claim, nil)
+	tokenString := "tokenString"
+	claim := factory.CreateUserClaim(model.User{})
+	suite.jwtServiceMock.EXPECT().VerifyJWT(tokenString).Return(&claim, nil)
 	suite.userRepositoryMock.EXPECT().Find(claim.ID).Return(model.User{}, err)
 	req := httptest.NewRequest("PUT", fmt.Sprintf("/users/activate?token=%v", tokenString), nil)
 	suite.ctx.Request = req
@@ -161,7 +158,10 @@ func (suite *UserServiceTestSuite) TestBadActivateWithRecordNotFound() {
 }
 
 func (suite *UserServiceTestSuite) TestBadActivateWithAlreadyActivated() {
-	suite.jwtServiceMock.EXPECT().VerifyJWT(tokenString).Return(claim, nil)
+	user := factory.NewUser(&factory.UserConfig{Activated: true})
+	tokenString := "tokenString"
+	claim := factory.CreateUserClaim(user)
+	suite.jwtServiceMock.EXPECT().VerifyJWT(tokenString).Return(&claim, nil)
 	suite.userRepositoryMock.EXPECT().Find(claim.ID).Return(model.User{Activated: true}, nil)
 	req := httptest.NewRequest("PUT", fmt.Sprintf("/users/activate?token=%v", tokenString), nil)
 	suite.ctx.Request = req
@@ -173,7 +173,9 @@ func (suite *UserServiceTestSuite) TestBadActivateWithAlreadyActivated() {
 func (suite *UserServiceTestSuite) TestBadActivateWithDBError() {
 	err := errors.New("db error")
 	user := model.User{}
-	suite.jwtServiceMock.EXPECT().VerifyJWT(tokenString).Return(claim, nil)
+	tokenString := "tokenString"
+	claim := factory.CreateUserClaim(user)
+	suite.jwtServiceMock.EXPECT().VerifyJWT(tokenString).Return(&claim, nil)
 	suite.userRepositoryMock.EXPECT().Find(claim.ID).Return(user, nil)
 	suite.userRepositoryMock.EXPECT().Activate(&user).Return(err)
 	req := httptest.NewRequest("PUT", fmt.Sprintf("/users/activate?token=%v", tokenString), nil)
@@ -181,4 +183,21 @@ func (suite *UserServiceTestSuite) TestBadActivateWithDBError() {
 	rerr := suite.service.Activate(suite.ctx)
 
 	suite.Equal(err, rerr)
+}
+
+func (suite *UserServiceTestSuite) TestSuccessDestroy() {
+	currentUser := factory.NewUser(&factory.UserConfig{})
+	suite.ctx.Set("currentUser", currentUser)
+	suite.userRepositoryMock.EXPECT().Destroy(&currentUser).Return(nil)
+	err := suite.service.Destroy(suite.ctx)
+	suite.Nil(err)
+}
+
+func (suite *UserServiceTestSuite) TestBadDestroyWithRepositoryReturnsError() {
+	currentUser := factory.NewUser(&factory.UserConfig{})
+	suite.ctx.Set("currentUser", currentUser)
+	err := errors.New("error")
+	suite.userRepositoryMock.EXPECT().Destroy(&currentUser).Return(err)
+	returnErr := suite.service.Destroy(suite.ctx)
+	suite.Equal(err, returnErr)
 }

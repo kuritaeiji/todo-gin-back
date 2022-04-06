@@ -14,6 +14,7 @@ type UserService interface {
 	Create(*gin.Context) (model.User, error)
 	IsUnique(*gin.Context) (bool, error)
 	Activate(*gin.Context) error
+	Destroy(*gin.Context) error
 }
 
 type userService struct {
@@ -64,6 +65,11 @@ func (s *userService) Activate(ctx *gin.Context) error {
 	}
 
 	return s.repository.Activate(&user)
+}
+
+func (c *userService) Destroy(ctx *gin.Context) error {
+	currentUser := ctx.MustGet("currentUser").(model.User)
+	return c.repository.Destroy(&currentUser)
 }
 
 // test用

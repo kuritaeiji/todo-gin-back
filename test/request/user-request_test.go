@@ -14,12 +14,14 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/kuritaeiji/todo-gin-back/config"
 	"github.com/kuritaeiji/todo-gin-back/db"
+	"github.com/kuritaeiji/todo-gin-back/factory"
 	"github.com/kuritaeiji/todo-gin-back/mock_gateway"
 	"github.com/kuritaeiji/todo-gin-back/model"
 	"github.com/kuritaeiji/todo-gin-back/server"
 	"github.com/kuritaeiji/todo-gin-back/service"
 	"github.com/kuritaeiji/todo-gin-back/validators"
 	"github.com/stretchr/testify/suite"
+	"gorm.io/gorm"
 )
 
 type UserRequestTestSuite struct {
@@ -27,6 +29,7 @@ type UserRequestTestSuite struct {
 	router *gin.Engine
 	mock   *mock_gateway.MockEmailGateway
 	rec    *httptest.ResponseRecorder
+	db     *gorm.DB
 }
 
 func (suite *UserRequestTestSuite) SetupSuite() {
@@ -41,6 +44,7 @@ func (suite *UserRequestTestSuite) SetupTest() {
 	suite.router = server.TestRouterSetup(emailGatewayMock)
 	suite.mock = emailGatewayMock
 	suite.rec = httptest.NewRecorder()
+	suite.db = db.GetDB()
 }
 
 func (suite *UserRequestTestSuite) TearDownSuite() {
@@ -217,4 +221,23 @@ func (suite *UserRequestTestSuite) TestBadActivateWithAlreadyActivatedUser() {
 	suite.Equal(config.AlreadyActivatedUserErrorResponse.Code, suite.rec.Code)
 	body := suite.rec.Body.String()
 	suite.Contains(body, config.AlreadyActivatedUserErrorResponse.Json["content"])
+}
+
+func (suite *UserRequestTestSuite) TestSuccessDestroy() {
+	user := factory.CreateUser(&factory.UserConfig{})
+	req := httptest.NewRequest("DELETE", "/api/users", nil)
+	req.Header.Add(config.TokenHeader, factory.CreateAccessToken(user))
+	suite.router.ServeHTTP(suite.rec, req)
+
+	suite.Equal(200, suite.rec.Code)
+	err := suite.db.First(&user).Error
+	suite.Equal(gorm.ErrRecordNotFound, err)
+}
+
+func (suite *UserRequestTestSuite) TestBadDestroyWithNotLoggedIn() {
+	req := httptest.NewRequest("DELETE", "/api/users", nil)
+	suite.router.ServeHTTP(suite.rec, req)
+
+	suite.Equal(config.NotLoggedInErrorResponse.Code, suite.rec.Code)
+	suite.Contains(suite.rec.Body.String(), config.NotLoggedInErrorResponse.Json["content"])
 }

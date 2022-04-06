@@ -15,6 +15,7 @@ func Init() {
 
 func RouterSetup(userController controller.UserController) *gin.Engine {
 	r := gin.Default()
+	r.Use(middleware.NewCorsMiddleware())
 
 	api := r.Group("/api")
 
@@ -29,6 +30,12 @@ func RouterSetup(userController controller.UserController) *gin.Engine {
 			user.GET("/unique", userController.IsUnique)
 			user.PUT("/activate", userController.Activate)
 		}
+	}
+
+	auth := api.Group("")
+	{
+		auth.Use(authMiddleware.Auth)
+		auth.DELETE("/users", userController.Destroy)
 	}
 
 	return r

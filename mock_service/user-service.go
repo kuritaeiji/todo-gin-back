@@ -64,6 +64,20 @@ func (mr *MockUserServiceMockRecorder) Create(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockUserService)(nil).Create), arg0)
 }
 
+// Destroy mocks base method.
+func (m *MockUserService) Destroy(arg0 *gin.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Destroy", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Destroy indicates an expected call of Destroy.
+func (mr *MockUserServiceMockRecorder) Destroy(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Destroy", reflect.TypeOf((*MockUserService)(nil).Destroy), arg0)
+}
+
 // IsUnique mocks base method.
 func (m *MockUserService) IsUnique(arg0 *gin.Context) (bool, error) {
 	m.ctrl.T.Helper()

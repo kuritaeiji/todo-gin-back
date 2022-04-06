@@ -62,6 +62,20 @@ func (mr *MockUserRepositoryMockRecorder) Create(user interface{}) *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockUserRepository)(nil).Create), user)
 }
 
+// Destroy mocks base method.
+func (m *MockUserRepository) Destroy(user *model.User) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Destroy", user)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Destroy indicates an expected call of Destroy.
+func (mr *MockUserRepositoryMockRecorder) Destroy(user interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Destroy", reflect.TypeOf((*MockUserRepository)(nil).Destroy), user)
+}
+
 // Find mocks base method.
 func (m *MockUserRepository) Find(id int) (model.User, error) {
 	m.ctrl.T.Helper()
