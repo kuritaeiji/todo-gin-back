@@ -14,11 +14,11 @@ import (
 )
 
 type UserConfig struct {
-	ID                   int
-	Email                string
-	Password             string
-	Activated            bool
-	IsNotUseDefaultValue bool
+	ID                 int
+	Email              string
+	Password           string
+	Activated          bool
+	NotUseDefaultValue bool
 }
 
 const (
@@ -29,7 +29,7 @@ const (
 var emailCount = 1
 
 func (config *UserConfig) setDefaultValue() {
-	if config.IsNotUseDefaultValue {
+	if config.NotUseDefaultValue {
 		return
 	}
 
@@ -42,12 +42,12 @@ func (config *UserConfig) setDefaultValue() {
 	}
 }
 
-func NewDtoUser(config UserConfig) dto.User {
+func NewDtoUser(config *UserConfig) dto.User {
 	config.setDefaultValue()
 	return dto.User{Email: config.Email, Password: config.Password}
 }
 
-func NewUser(config UserConfig) model.User {
+func NewUser(config *UserConfig) model.User {
 	dtoUser := NewDtoUser(config)
 	var user model.User
 	dtoUser.Transfer(&user)
@@ -57,7 +57,7 @@ func NewUser(config UserConfig) model.User {
 	return user
 }
 
-func CreateUser(config UserConfig) model.User {
+func CreateUser(config *UserConfig) model.User {
 	user := NewUser(config)
 	db.GetDB().Create(&user)
 	return user
@@ -74,7 +74,7 @@ func CreateUserClaim(user model.User) service.UserClaim {
 	}
 }
 
-func CreateUserRequestBody(config UserConfig) io.Reader {
+func CreateUserRequestBody(config *UserConfig) io.Reader {
 	config.setDefaultValue()
 	body := map[string]string{
 		"email":    config.Email,

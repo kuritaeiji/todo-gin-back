@@ -69,8 +69,8 @@ func (suite *AuthMiddlewareTestSuite) TestBadAuthWithExpiredJWT() {
 	suite.ctx.Request = req
 	suite.middleware.Auth(suite.ctx)
 
-	suite.Equal(config.JWTExpiredErrorResponse.Code, suite.rec.Code)
-	suite.Contains(suite.rec.Body.String(), config.JWTExpiredErrorResponse.Json["content"])
+	suite.Equal(config.NotLoggedInWithJwtIsExpiredErrorResponse.Code, suite.rec.Code)
+	suite.Contains(suite.rec.Body.String(), config.NotLoggedInWithJwtIsExpiredErrorResponse.Json["content"])
 }
 
 func (suite *AuthMiddlewareTestSuite) TestBadAuthWithJWTValidationError() {

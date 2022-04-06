@@ -50,11 +50,12 @@ func TestUserServiceTest(t *testing.T) {
 }
 
 func (suite *UserServiceTestSuite) TestSuccessCreate() {
-	req := httptest.NewRequest("POST", "/users", factory.CreateUserRequestBody(factory.UserConfig{}))
+	var userConfig factory.UserConfig
+	req := httptest.NewRequest("POST", "/users", factory.CreateUserRequestBody(&userConfig))
 	req.Header.Add("Content-Type", binding.MIMEJSON)
 	suite.ctx.Request = req
 	suite.userRepositoryMock.EXPECT().Create(gomock.Any()).Return(nil).Do(func(user *model.User) {
-		suite.Contains(user.Email, factory.DefaultEmail)
+		suite.Equal(userConfig.Email, user.Email)
 		suite.Nil(bcrypt.CompareHashAndPassword([]byte(user.PasswordDigest), []byte(factory.DefualtPassword)))
 	})
 	user, err := suite.service.Create(suite.ctx)
@@ -73,12 +74,13 @@ func (suite *UserServiceTestSuite) TestBadCreateWithValidation() {
 }
 
 func (suite *UserServiceTestSuite) TestBadCreateWithDBError() {
-	req := httptest.NewRequest("POST", "/users", factory.CreateUserRequestBody(factory.UserConfig{}))
+	var userConfig factory.UserConfig
+	req := httptest.NewRequest("POST", "/users", factory.CreateUserRequestBody(&userConfig))
 	req.Header.Add("Content-Type", binding.MIMEJSON)
 	suite.ctx.Request = req
 	err := errors.New("error")
 	suite.userRepositoryMock.EXPECT().Create(gomock.Any()).Return(err).Do(func(user *model.User) {
-		suite.Contains(user.Email, factory.DefaultEmail)
+		suite.Equal(userConfig.Email, user.Email)
 		suite.Nil(bcrypt.CompareHashAndPassword([]byte(user.PasswordDigest), []byte(factory.DefualtPassword)))
 	})
 	_, rerr := suite.service.Create(suite.ctx)
@@ -156,7 +158,7 @@ func (suite *UserServiceTestSuite) TestBadActivateWithRecordNotFound() {
 }
 
 func (suite *UserServiceTestSuite) TestBadActivateWithAlreadyActivated() {
-	user := factory.NewUser(factory.UserConfig{Activated: true})
+	user := factory.NewUser(&factory.UserConfig{Activated: true})
 	tokenString := "tokenString"
 	claim := factory.CreateUserClaim(user)
 	suite.jwtServiceMock.EXPECT().VerifyJWT(tokenString).Return(&claim, nil)
@@ -184,7 +186,7 @@ func (suite *UserServiceTestSuite) TestBadActivateWithDBError() {
 }
 
 func (suite *UserServiceTestSuite) TestSuccessDestroy() {
-	currentUser := factory.NewUser(factory.UserConfig{})
+	currentUser := factory.NewUser(&factory.UserConfig{})
 	suite.ctx.Set("currentUser", currentUser)
 	suite.userRepositoryMock.EXPECT().Destroy(&currentUser).Return(nil)
 	err := suite.service.Destroy(suite.ctx)
@@ -192,7 +194,7 @@ func (suite *UserServiceTestSuite) TestSuccessDestroy() {
 }
 
 func (suite *UserServiceTestSuite) TestBadDestroyWithRepositoryReturnsError() {
-	currentUser := factory.NewUser(factory.UserConfig{})
+	currentUser := factory.NewUser(&factory.UserConfig{})
 	suite.ctx.Set("currentUser", currentUser)
 	err := errors.New("error")
 	suite.userRepositoryMock.EXPECT().Destroy(&currentUser).Return(err)

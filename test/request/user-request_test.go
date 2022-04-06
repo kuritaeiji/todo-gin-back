@@ -224,7 +224,7 @@ func (suite *UserRequestTestSuite) TestBadActivateWithAlreadyActivatedUser() {
 }
 
 func (suite *UserRequestTestSuite) TestSuccessDestroy() {
-	user := factory.CreateUser(factory.UserConfig{})
+	user := factory.CreateUser(&factory.UserConfig{})
 	req := httptest.NewRequest("DELETE", "/api/users", nil)
 	req.Header.Add(config.TokenHeader, factory.CreateAccessToken(user))
 	suite.router.ServeHTTP(suite.rec, req)
@@ -241,4 +241,3 @@ func (suite *UserRequestTestSuite) TestBadDestroyWithNotLoggedIn() {
 	suite.Equal(config.NotLoggedInErrorResponse.Code, suite.rec.Code)
 	suite.Contains(suite.rec.Body.String(), config.NotLoggedInErrorResponse.Json["content"])
 }
-

@@ -64,6 +64,11 @@ var (
 		Json: createJson("user is already logged in"),
 	}
 
+	NotLoggedInWithJwtIsExpiredErrorResponse = ErrorResponse{
+		Code: 401,
+		Json: createJson("user is not logged in with jwt is expired"),
+	}
+
 	NotLoggedInErrorResponse = ErrorResponse{
 		Code: 401,
 		Json: createJson("user is not logged in"),

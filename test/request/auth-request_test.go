@@ -85,7 +85,7 @@ func (suite *AuthRequestTestSuite) TestSuccessLogin() {
 }
 
 func (suite *AuthRequestTestSuite) TestBadLoginWithAreadyLogin() {
-	user := factory.CreateUser(factory.UserConfig{Email: email, Password: password})
+	user := factory.CreateUser(&factory.UserConfig{Email: email, Password: password})
 	tokenString := factory.CreateAccessToken(user)
 	req := httptest.NewRequest("POST", "/api/login", nil)
 	req.Header.Add("Authorization", "Bearer "+tokenString)

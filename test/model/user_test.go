@@ -19,7 +19,7 @@ func (suite *UserModelTestSuite) SetupSuite() {
 }
 
 func (suite *UserModelTestSuite) SetupTest() {
-	suite.model = factory.NewUser(factory.UserConfig{})
+	suite.model = factory.NewUser(&factory.UserConfig{})
 }
 
 func TestUserModel(t *testing.T) {

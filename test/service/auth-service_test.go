@@ -43,12 +43,13 @@ func TestAuthService(t *testing.T) {
 }
 
 func (suite *AuthServiceTestSuite) TestSuccessLogin() {
-	user := factory.NewUser(factory.UserConfig{})
+	var userConfig factory.UserConfig
+	user := factory.NewUser(&userConfig)
 	tokenString := factory.CreateAccessToken(user)
-	suite.userRepositoryMock.EXPECT().FindByEmail(user.Email).Return(user, nil)
+	suite.userRepositoryMock.EXPECT().FindByEmail(userConfig.Email).Return(user, nil)
 	suite.jwtServiceMock.EXPECT().CreateJWT(user, service.DayFromNowAccessToken).Return(tokenString)
 
-	req := httptest.NewRequest("POST", "/login", factory.CreateUserRequestBody(factory.UserConfig{Email: user.Email}))
+	req := httptest.NewRequest("POST", "/login", factory.CreateUserRequestBody(&userConfig))
 	req.Header.Add("Content-Type", binding.MIMEJSON)
 	suite.ctx.Request = req
 	token, err := suite.service.Login(suite.ctx)
@@ -67,22 +68,23 @@ func (suite *AuthServiceTestSuite) TestBadLoginWithCannotBind() {
 }
 
 func (suite *AuthServiceTestSuite) TestBadLoginWithRecordNotFound() {
-	req := httptest.NewRequest("POST", "/login", factory.CreateUserRequestBody(factory.UserConfig{}))
+	var userConfig factory.UserConfig
+	req := httptest.NewRequest("POST", "/login", factory.CreateUserRequestBody(&userConfig))
 	req.Header.Add("Content-Type", binding.MIMEJSON)
 	suite.ctx.Request = req
-	suite.userRepositoryMock.EXPECT().FindByEmail(gomock.Any()).Return(model.User{}, gorm.ErrRecordNotFound).Do(func(email string) {
-		suite.Contains(email, factory.DefaultEmail)
-	})
+	suite.userRepositoryMock.EXPECT().FindByEmail(userConfig.Email).Return(model.User{}, gorm.ErrRecordNotFound)
 	_, err := suite.service.Login(suite.ctx)
 
 	suite.Equal(gorm.ErrRecordNotFound, err)
 }
 
 func (suite *AuthServiceTestSuite) TestBadLoginWithPasswordAuthenticationError() {
-	user := factory.NewUser(factory.UserConfig{})
+	var userConfig factory.UserConfig
+	user := factory.NewUser(&userConfig)
 	suite.userRepositoryMock.EXPECT().FindByEmail(user.Email).Return(user, nil)
 
-	req := httptest.NewRequest("POST", "/login", factory.CreateUserRequestBody(factory.UserConfig{Email: user.Email, Password: "invalid password"}))
+	userConfig.Password = "invalid password"
+	req := httptest.NewRequest("POST", "/login", factory.CreateUserRequestBody(&userConfig))
 	req.Header.Add("Content-Type", binding.MIMEJSON)
 	suite.ctx.Request = req
 	_, err := suite.service.Login(suite.ctx)

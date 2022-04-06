@@ -102,7 +102,7 @@ func (suite *UserRepositoryTestSuite) TestBadFindByEmailWithRecordNotFound() {
 }
 
 func (suite *UserRepositoryTestSuite) TestSuccessDestroy() {
-	user := factory.CreateUser(factory.UserConfig{})
+	user := factory.CreateUser(&factory.UserConfig{})
 	var count int64
 	suite.db.Model(&model.User{}).Count(&count)
 	suite.Equal(int64(1), count)
@@ -114,7 +114,7 @@ func (suite *UserRepositoryTestSuite) TestSuccessDestroy() {
 }
 
 func (suite *UserRepositoryTestSuite) TestBadDestroyWithDBError() {
-	user := factory.NewUser(factory.UserConfig{})
+	user := factory.NewUser(&factory.UserConfig{})
 	err := suite.userRepository.Destroy(&user)
 
 	suite.Error(err)
