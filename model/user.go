@@ -23,7 +23,3 @@ func (user *User) Authenticate(password string) bool {
 
 	return false
 }
-
-func (user *User) AfterDelete(db *gorm.DB) error {
-	return db.Delete(user.Lists).Error
-}

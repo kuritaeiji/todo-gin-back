@@ -64,6 +64,6 @@ func migrate() {
 
 // test
 func DeleteAll() {
-	db.Exec("DELETE FROM users")
 	db.Exec("DELETE FROM lists")
+	db.Exec("DELETE FROM users")
 }

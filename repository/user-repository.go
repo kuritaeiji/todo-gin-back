@@ -7,6 +7,7 @@ import (
 	"github.com/kuritaeiji/todo-gin-back/db"
 	"github.com/kuritaeiji/todo-gin-back/model"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type UserRepository interface {
@@ -41,7 +42,7 @@ func (r *userRepository) Activate(user *model.User) error {
 }
 
 func (r *userRepository) Destroy(user *model.User) error {
-	return r.db.Delete(user).Error
+	return r.db.Select(clause.Associations).Delete(user).Error
 }
 
 func (r *userRepository) IsUnique(email string) (bool, error) {
