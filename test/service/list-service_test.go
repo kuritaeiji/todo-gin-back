@@ -9,6 +9,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/golang/mock/gomock"
 	"github.com/kuritaeiji/todo-gin-back/factory"
+	"github.com/kuritaeiji/todo-gin-back/middleware"
 	"github.com/kuritaeiji/todo-gin-back/mock_repository"
 	"github.com/kuritaeiji/todo-gin-back/model"
 	"github.com/kuritaeiji/todo-gin-back/service"
@@ -40,7 +41,7 @@ func TestListServiceSuite(t *testing.T) {
 
 func (suite *ListServiceTestSuite) TestSuccessCreate() {
 	currentUser := model.User{}
-	suite.ctx.Set("currentUser", currentUser)
+	suite.ctx.Set(middleware.CurrentUserKey, currentUser)
 	listConfig := &factory.ListConfig{}
 	req := httptest.NewRequest("POST", "/api/lists", factory.CreateListRequestBody(listConfig))
 	suite.ctx.Request = req
@@ -66,7 +67,7 @@ func (suite *ListServiceTestSuite) TestBadCreateWithDBError() {
 	req := httptest.NewRequest("POST", "/api/lists", factory.CreateListRequestBody(listConfig))
 	suite.ctx.Request = req
 	var currentUser model.User
-	suite.ctx.Set("currentUser", currentUser)
+	suite.ctx.Set(middleware.CurrentUserKey, currentUser)
 	err := errors.New("DB error")
 	list := factory.NewList(listConfig)
 	suite.listRepositoryMock.EXPECT().Create(&currentUser, &list).Return(err)

@@ -8,11 +8,6 @@ import (
 	"github.com/joho/godotenv"
 )
 
-const (
-	TokenHeader = "Authorization"
-	Bearer      = "Bearer "
-)
-
 var (
 	WorkDir string
 )
