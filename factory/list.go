@@ -10,14 +10,11 @@ import (
 	"github.com/kuritaeiji/todo-gin-back/model"
 )
 
-var (
-	defaultTitle  = "list title"
-	defualtUserID = 1
-)
+var defaultTitle = "list title"
 
 type ListConfig struct {
 	Title              string
-	UserID             int
+	Index              int
 	NotUseDefaultValue bool
 }
 
@@ -29,15 +26,11 @@ func (config *ListConfig) setDefaultValue() {
 	if config.Title == "" {
 		config.Title = defaultTitle
 	}
-
-	if config.UserID == 0 {
-		config.UserID = defualtUserID
-	}
 }
 
 func NewDtoList(config *ListConfig) dto.List {
 	config.setDefaultValue()
-	return dto.List{Title: config.Title, UserID: config.UserID}
+	return dto.List{Title: config.Title, Index: config.Index}
 }
 
 func NewList(config *ListConfig) model.List {
@@ -57,8 +50,8 @@ func CreateList(config *ListConfig, user model.User) model.List {
 func CreateListRequestBody(config *ListConfig) io.Reader {
 	config.setDefaultValue()
 	body := map[string]interface{}{
-		"title":  config.Title,
-		"userID": config.UserID,
+		"title": config.Title,
+		"index": config.Index,
 	}
 	bodyBytes, _ := json.Marshal(body)
 	return strings.NewReader(string(bodyBytes))

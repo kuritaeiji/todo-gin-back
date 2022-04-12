@@ -42,7 +42,7 @@ func (suite *ListDtoTestSuite) TestSuccessValidation() {
 }
 
 func (suite *ListDtoTestSuite) TestBadValidationWithTitleRequired() {
-	body := factory.CreateListRequestBody(&factory.ListConfig{NotUseDefaultValue: true, UserID: 1})
+	body := factory.CreateListRequestBody(&factory.ListConfig{NotUseDefaultValue: true})
 	req := httptest.NewRequest("POST", "/api/lists", body)
 	suite.ctx.Request = req
 	err := suite.ctx.ShouldBindJSON(&suite.dto)
@@ -63,13 +63,13 @@ func (suite *ListDtoTestSuite) TestBadValidationWithTitleMax50() {
 	suite.Equal("Title", verr[0].Field())
 }
 
-func (suite *ListDtoTestSuite) TestBadValidationWithUserIDRequired() {
-	body := factory.CreateListRequestBody(&factory.ListConfig{NotUseDefaultValue: true, Title: "a"})
+func (suite *ListDtoTestSuite) TestBadValidationWithIndexGreaterThenEqual0() {
+	body := factory.CreateListRequestBody(&factory.ListConfig{Index: -1})
 	req := httptest.NewRequest("POST", "/api/lists", body)
 	suite.ctx.Request = req
 	err := suite.ctx.ShouldBindJSON(&suite.dto)
 	verr, _ := err.(validator.ValidationErrors)
 
-	suite.Equal("required", verr[0].Tag())
-	suite.Equal("UserID", verr[0].Field())
+	suite.Equal("gte", verr[0].Tag())
+	suite.Equal("Index", verr[0].Field())
 }

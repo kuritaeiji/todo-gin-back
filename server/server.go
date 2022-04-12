@@ -36,6 +36,12 @@ func RouterSetup(userController controller.UserController) *gin.Engine {
 	{
 		auth.Use(authMiddleware.Auth)
 		auth.DELETE("/users", userController.Destroy)
+
+		list := auth.Group("/lists")
+		{
+			listCon := controller.NewListController()
+			list.POST("", listCon.Create)
+		}
 	}
 
 	return r
