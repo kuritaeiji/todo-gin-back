@@ -12,11 +12,22 @@ type listController struct {
 }
 
 type ListController interface {
-	Create(*gin.Context)
+	Index(*gin.Context)  // GET /api/lists
+	Create(*gin.Context) // POST /api/lists
 }
 
 func NewListController() ListController {
 	return &listController{service: service.NewListService()}
+}
+
+func (c *listController) Index(ctx *gin.Context) {
+	lists, err := c.service.Index(ctx)
+	if err != nil {
+		ctx.AbortWithStatus(500)
+		return
+	}
+
+	ctx.JSON(200, lists)
 }
 
 func (c *listController) Create(ctx *gin.Context) {

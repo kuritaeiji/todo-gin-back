@@ -40,6 +40,7 @@ func RouterSetup(userController controller.UserController) *gin.Engine {
 		list := auth.Group("/lists")
 		{
 			listCon := controller.NewListController()
+			list.GET("", listCon.Index)
 			list.POST("", listCon.Create)
 		}
 	}

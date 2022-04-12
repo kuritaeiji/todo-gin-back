@@ -4,6 +4,7 @@ package service
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/kuritaeiji/todo-gin-back/config"
 	"github.com/kuritaeiji/todo-gin-back/dto"
 	"github.com/kuritaeiji/todo-gin-back/model"
 	"github.com/kuritaeiji/todo-gin-back/repository"
@@ -15,10 +16,17 @@ type listService struct {
 
 type ListService interface {
 	Create(*gin.Context) (model.List, error)
+	Index(*gin.Context) ([]model.List, error)
 }
 
 func NewListService() ListService {
 	return &listService{rep: repository.NewListRepository()}
+}
+
+func (s *listService) Index(ctx *gin.Context) ([]model.List, error) {
+	currentUser := ctx.MustGet(config.CurrentUserKey).(model.User)
+	err := s.rep.FindLists(&currentUser)
+	return currentUser.Lists, err
 }
 
 func (s *listService) Create(ctx *gin.Context) (model.List, error) {
@@ -30,7 +38,7 @@ func (s *listService) Create(ctx *gin.Context) (model.List, error) {
 
 	var list model.List
 	dtoList.Transfer(&list)
-	currentUser := ctx.MustGet("currentUser").(model.User)
+	currentUser := ctx.MustGet(config.CurrentUserKey).(model.User)
 	err = s.rep.Create(&currentUser, &list)
 	if err != nil {
 		return model.List{}, err

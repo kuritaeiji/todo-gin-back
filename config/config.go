@@ -8,6 +8,12 @@ import (
 	"github.com/joho/godotenv"
 )
 
+const (
+	TokenHeader    = "Authorization"
+	Bearer         = "Bearer "
+	CurrentUserKey = "currentUser"
+)
+
 var (
 	WorkDir string
 )

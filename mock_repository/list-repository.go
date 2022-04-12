@@ -47,3 +47,17 @@ func (mr *MockListRepositoryMockRecorder) Create(arg0, arg1 interface{}) *gomock
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockListRepository)(nil).Create), arg0, arg1)
 }
+
+// FindLists mocks base method.
+func (m *MockListRepository) FindLists(arg0 *model.User) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindLists", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// FindLists indicates an expected call of FindLists.
+func (mr *MockListRepositoryMockRecorder) FindLists(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindLists", reflect.TypeOf((*MockListRepository)(nil).FindLists), arg0)
+}

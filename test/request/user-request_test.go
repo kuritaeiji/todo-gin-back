@@ -15,7 +15,6 @@ import (
 	"github.com/kuritaeiji/todo-gin-back/config"
 	"github.com/kuritaeiji/todo-gin-back/db"
 	"github.com/kuritaeiji/todo-gin-back/factory"
-	"github.com/kuritaeiji/todo-gin-back/middleware"
 	"github.com/kuritaeiji/todo-gin-back/mock_gateway"
 	"github.com/kuritaeiji/todo-gin-back/model"
 	"github.com/kuritaeiji/todo-gin-back/server"
@@ -227,7 +226,7 @@ func (suite *UserRequestTestSuite) TestBadActivateWithAlreadyActivatedUser() {
 func (suite *UserRequestTestSuite) TestSuccessDestroy() {
 	user := factory.CreateUser(&factory.UserConfig{})
 	req := httptest.NewRequest("DELETE", "/api/users", nil)
-	req.Header.Add(middleware.TokenHeader, factory.CreateAccessToken(user))
+	req.Header.Add(config.TokenHeader, factory.CreateAccessToken(user))
 	suite.router.ServeHTTP(suite.rec, req)
 
 	suite.Equal(200, suite.rec.Code)
@@ -248,7 +247,7 @@ func (suite *UserRequestTestSuite) TestDestroyListsWhenDestroyUser() {
 	token := factory.CreateAccessToken(user)
 	factory.CreateList(&factory.ListConfig{}, user)
 	req := httptest.NewRequest("DELETE", "/api/users", nil)
-	req.Header.Add(middleware.TokenHeader, token)
+	req.Header.Add(config.TokenHeader, token)
 	suite.router.ServeHTTP(suite.rec, req)
 
 	var count int64

@@ -49,3 +49,18 @@ func (mr *MockListServiceMockRecorder) Create(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockListService)(nil).Create), arg0)
 }
+
+// Index mocks base method.
+func (m *MockListService) Index(arg0 *gin.Context) ([]model.List, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Index", arg0)
+	ret0, _ := ret[0].([]model.List)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Index indicates an expected call of Index.
+func (mr *MockListServiceMockRecorder) Index(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Index", reflect.TypeOf((*MockListService)(nil).Index), arg0)
+}

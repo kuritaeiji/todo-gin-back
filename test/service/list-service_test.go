@@ -8,8 +8,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/golang/mock/gomock"
+	"github.com/kuritaeiji/todo-gin-back/config"
 	"github.com/kuritaeiji/todo-gin-back/factory"
-	"github.com/kuritaeiji/todo-gin-back/middleware"
 	"github.com/kuritaeiji/todo-gin-back/mock_repository"
 	"github.com/kuritaeiji/todo-gin-back/model"
 	"github.com/kuritaeiji/todo-gin-back/service"
@@ -39,9 +39,30 @@ func TestListServiceSuite(t *testing.T) {
 	suite.Run(t, new(ListServiceTestSuite))
 }
 
+func (suite *ListServiceTestSuite) TestSuccessIndex() {
+	user := factory.NewUser(&factory.UserConfig{})
+	suite.ctx.Set(config.CurrentUserKey, user)
+	suite.listRepositoryMock.EXPECT().FindLists(&user).Return(nil)
+
+	lists, err := suite.service.Index(suite.ctx)
+	suite.Nil(err)
+	suite.Equal(user.Lists, lists)
+}
+
+func (suite *ListServiceTestSuite) TestBadIndexWithDBError() {
+	user := factory.NewUser(&factory.UserConfig{})
+	suite.ctx.Set(config.CurrentUserKey, user)
+	err := errors.New("db error")
+	suite.listRepositoryMock.EXPECT().FindLists(&user).Return(err)
+	lists, rerr := suite.service.Index(suite.ctx)
+
+	suite.Equal(err, rerr)
+	suite.Equal(user.Lists, lists)
+}
+
 func (suite *ListServiceTestSuite) TestSuccessCreate() {
 	currentUser := model.User{}
-	suite.ctx.Set(middleware.CurrentUserKey, currentUser)
+	suite.ctx.Set(config.CurrentUserKey, currentUser)
 	listConfig := &factory.ListConfig{}
 	req := httptest.NewRequest("POST", "/api/lists", factory.CreateListRequestBody(listConfig))
 	suite.ctx.Request = req
@@ -67,7 +88,7 @@ func (suite *ListServiceTestSuite) TestBadCreateWithDBError() {
 	req := httptest.NewRequest("POST", "/api/lists", factory.CreateListRequestBody(listConfig))
 	suite.ctx.Request = req
 	var currentUser model.User
-	suite.ctx.Set(middleware.CurrentUserKey, currentUser)
+	suite.ctx.Set(config.CurrentUserKey, currentUser)
 	err := errors.New("DB error")
 	list := factory.NewList(listConfig)
 	suite.listRepositoryMock.EXPECT().Create(&currentUser, &list).Return(err)

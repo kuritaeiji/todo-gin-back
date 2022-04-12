@@ -7,6 +7,7 @@ import (
 	"github.com/kuritaeiji/todo-gin-back/config"
 	"github.com/kuritaeiji/todo-gin-back/db"
 	"github.com/kuritaeiji/todo-gin-back/factory"
+	"github.com/kuritaeiji/todo-gin-back/model"
 	"github.com/kuritaeiji/todo-gin-back/repository"
 	"github.com/stretchr/testify/suite"
 )
@@ -43,4 +44,14 @@ func (suite *ListRepositoryTestSuite) TestSuccessCreate() {
 
 	suite.Nil(err)
 	suite.Equal(list.Title, user.Lists[0].Title)
+}
+
+func (suite *ListRepositoryTestSuite) TestSuccessFindLists() {
+	user := factory.CreateUser(&factory.UserConfig{})
+	list1 := factory.CreateList(&factory.ListConfig{}, user)
+	list2 := factory.CreateList(&factory.ListConfig{Index: 1}, user)
+	err := suite.repository.FindLists(&user)
+
+	suite.Nil(err)
+	suite.Equal([]model.List{list1, list2}, user.Lists)
 }

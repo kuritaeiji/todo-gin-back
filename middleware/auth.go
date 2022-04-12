@@ -10,12 +10,6 @@ import (
 	"github.com/kuritaeiji/todo-gin-back/service"
 )
 
-const (
-	TokenHeader    = "Authorization"
-	Bearer         = "Bearer "
-	CurrentUserKey = "currentUser"
-)
-
 type AuthMiddleware interface {
 	Auth(*gin.Context)
 	Guest(*gin.Context)
@@ -53,7 +47,7 @@ func (m *authMiddleware) Auth(ctx *gin.Context) {
 		return
 	}
 
-	ctx.Set(CurrentUserKey, currentUser)
+	ctx.Set(config.CurrentUserKey, currentUser)
 	ctx.Next()
 }
 
@@ -67,7 +61,7 @@ func (m *authMiddleware) Guest(ctx *gin.Context) {
 }
 
 func (m *authMiddleware) tokenString(ctx *gin.Context) string {
-	return strings.Replace(ctx.GetHeader(TokenHeader), Bearer, "", 1)
+	return strings.Replace(ctx.GetHeader(config.TokenHeader), config.Bearer, "", 1)
 }
 
 // test

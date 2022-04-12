@@ -14,7 +14,6 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/kuritaeiji/todo-gin-back/config"
 	"github.com/kuritaeiji/todo-gin-back/factory"
-	"github.com/kuritaeiji/todo-gin-back/middleware"
 	"github.com/kuritaeiji/todo-gin-back/mock_repository"
 	"github.com/kuritaeiji/todo-gin-back/mock_service"
 	"github.com/kuritaeiji/todo-gin-back/model"
@@ -188,7 +187,7 @@ func (suite *UserServiceTestSuite) TestBadActivateWithDBError() {
 
 func (suite *UserServiceTestSuite) TestSuccessDestroy() {
 	currentUser := factory.NewUser(&factory.UserConfig{})
-	suite.ctx.Set(middleware.CurrentUserKey, currentUser)
+	suite.ctx.Set(config.CurrentUserKey, currentUser)
 	suite.userRepositoryMock.EXPECT().Destroy(&currentUser).Return(nil)
 	err := suite.service.Destroy(suite.ctx)
 	suite.Nil(err)
@@ -196,7 +195,7 @@ func (suite *UserServiceTestSuite) TestSuccessDestroy() {
 
 func (suite *UserServiceTestSuite) TestBadDestroyWithRepositoryReturnsError() {
 	currentUser := factory.NewUser(&factory.UserConfig{})
-	suite.ctx.Set(middleware.CurrentUserKey, currentUser)
+	suite.ctx.Set(config.CurrentUserKey, currentUser)
 	err := errors.New("error")
 	suite.userRepositoryMock.EXPECT().Destroy(&currentUser).Return(err)
 	returnErr := suite.service.Destroy(suite.ctx)

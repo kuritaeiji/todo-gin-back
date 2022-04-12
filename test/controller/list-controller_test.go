@@ -39,6 +39,25 @@ func TestListControllerSuite(t *testing.T) {
 	suite.Run(t, new(ListControllerTestSuite))
 }
 
+func (suite *ListControllerTestSuite) TestSuccessIndex() {
+	var lists []model.List
+	suite.listServiceMock.EXPECT().Index(suite.ctx).Return(lists, nil)
+	suite.con.Index(suite.ctx)
+
+	suite.Equal(200, suite.rec.Code)
+	var rLists []model.List
+	json.Unmarshal(suite.rec.Body.Bytes(), &rLists)
+	suite.Equal(lists, rLists)
+}
+
+func (suite *ListControllerTestSuite) TestBadIndexWithError() {
+	err := errors.New("error")
+	suite.listServiceMock.EXPECT().Index(suite.ctx).Return([]model.List{}, err)
+	suite.con.Index(suite.ctx)
+
+	suite.Equal(500, suite.rec.Code)
+}
+
 func (suite *ListControllerTestSuite) TestSuccessCreate() {
 	var list model.List
 	list.Title = "test"

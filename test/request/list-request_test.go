@@ -10,7 +10,6 @@ import (
 	"github.com/kuritaeiji/todo-gin-back/controller"
 	"github.com/kuritaeiji/todo-gin-back/db"
 	"github.com/kuritaeiji/todo-gin-back/factory"
-	"github.com/kuritaeiji/todo-gin-back/middleware"
 	"github.com/kuritaeiji/todo-gin-back/model"
 	"github.com/kuritaeiji/todo-gin-back/server"
 	"github.com/kuritaeiji/todo-gin-back/validators"
@@ -50,13 +49,28 @@ func TestListRequestSuite(t *testing.T) {
 	suite.Run(t, new(ListRequestTestSuite))
 }
 
+func (suite *ListRequestTestSuite) TestSuccessIndex() {
+	user := factory.CreateUser(&factory.UserConfig{})
+	token := factory.CreateAccessToken(user)
+	list1 := factory.CreateList(&factory.ListConfig{Index: 0}, user)
+	list2 := factory.CreateList(&factory.ListConfig{Index: 1}, user)
+	req := httptest.NewRequest("GET", "/api/lists", nil)
+	req.Header.Add(config.TokenHeader, token)
+	suite.router.ServeHTTP(suite.rec, req)
+
+	suite.Equal(200, suite.rec.Code)
+	var lists []model.List
+	json.Unmarshal(suite.rec.Body.Bytes(), &lists)
+	suite.Equal([]model.List{list1, list2}, lists)
+}
+
 func (suite *ListRequestTestSuite) TestSuccessCreate() {
 	user := factory.CreateUser(&factory.UserConfig{})
 	token := factory.CreateAccessToken(user)
 	listConfig := &factory.ListConfig{}
 	body := factory.CreateListRequestBody(listConfig)
 	req := httptest.NewRequest("POST", "/api/lists", body)
-	req.Header.Add(middleware.TokenHeader, token)
+	req.Header.Add(config.TokenHeader, token)
 	suite.router.ServeHTTP(suite.rec, req)
 
 	suite.Equal(200, suite.rec.Code)
@@ -75,7 +89,7 @@ func (suite *ListRequestTestSuite) TestBadCreateWithValidationError() {
 	token := factory.CreateAccessToken(user)
 	body := factory.CreateListRequestBody(&factory.ListConfig{NotUseDefaultValue: true})
 	req := httptest.NewRequest("POST", "/api/lists", body)
-	req.Header.Add(middleware.TokenHeader, token)
+	req.Header.Add(config.TokenHeader, token)
 	suite.router.ServeHTTP(suite.rec, req)
 
 	suite.Equal(config.ValidationErrorResponse.Code, suite.rec.Code)
