@@ -65,7 +65,8 @@ func (suite *ListRequestTestSuite) TestSuccessIndex() {
 	suite.Equal(200, suite.rec.Code)
 	var lists []model.List
 	json.Unmarshal(suite.rec.Body.Bytes(), &lists)
-	suite.Equal([]model.List{list1, list2}, lists)
+	suite.Equal(list1.ID, lists[0].ID)
+	suite.Equal(list2.ID, lists[1].ID)
 }
 
 func (suite *ListRequestTestSuite) TestSuccessCreate() {
