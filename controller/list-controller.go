@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/kuritaeiji/todo-gin-back/config"
+	"github.com/kuritaeiji/todo-gin-back/model"
 	"github.com/kuritaeiji/todo-gin-back/service"
 	"gorm.io/gorm"
 )
@@ -30,7 +31,7 @@ func (c *listController) Index(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(200, lists)
+	ctx.JSON(200, model.ToJsonListSlice(lists))
 }
 
 func (c *listController) Create(ctx *gin.Context) {
@@ -46,7 +47,7 @@ func (c *listController) Create(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(200, list)
+	ctx.JSON(200, list.ToJson())
 }
 
 func (c *listController) Update(ctx *gin.Context) {
@@ -72,7 +73,7 @@ func (c *listController) Update(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(200, list)
+	ctx.JSON(200, list.ToJson())
 }
 
 func (c *listController) Destroy(ctx *gin.Context) {

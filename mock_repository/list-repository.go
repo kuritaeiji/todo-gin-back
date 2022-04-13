@@ -91,20 +91,6 @@ func (mr *MockListRepositoryMockRecorder) FindLists(arg0 interface{}) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindLists", reflect.TypeOf((*MockListRepository)(nil).FindLists), arg0)
 }
 
-// SetParentUser mocks base method.
-func (m *MockListRepository) SetParentUser(arg0 *model.List) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetParentUser", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SetParentUser indicates an expected call of SetParentUser.
-func (mr *MockListRepositoryMockRecorder) SetParentUser(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetParentUser", reflect.TypeOf((*MockListRepository)(nil).SetParentUser), arg0)
-}
-
 // Update mocks base method.
 func (m *MockListRepository) Update(list *model.List, updatingList model.List) error {
 	m.ctrl.T.Helper()

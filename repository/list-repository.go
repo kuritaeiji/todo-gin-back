@@ -18,7 +18,6 @@ type ListRepository interface {
 	Destroy(*model.List) error
 	Find(id int) (model.List, error)
 	FindLists(*model.User) error
-	SetParentUser(*model.List) error
 }
 
 func NewListRepository() ListRepository {
@@ -57,8 +56,4 @@ func (r *listRepository) Find(id int) (model.List, error) {
 
 func (r *listRepository) FindLists(user *model.User) error {
 	return r.db.Where(model.List{UserID: user.ID}).Order("lists.index ASC").Find(&user.Lists).Error
-}
-
-func (r *listRepository) SetParentUser(list *model.List) error {
-	return r.db.First(&list.User, list.UserID).Error
 }

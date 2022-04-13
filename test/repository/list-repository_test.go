@@ -90,12 +90,3 @@ func (suite *ListRepositoryTestSuite) TestSuccessFindLists() {
 	suite.Nil(err)
 	suite.Equal([]model.List{list1, list2}, user.Lists)
 }
-
-func (suite *ListRepositoryTestSuite) TestSuccessSetParentUser() {
-	user := factory.CreateUser(&factory.UserConfig{})
-	list := factory.CreateList(&factory.ListConfig{}, user)
-	err := suite.repository.SetParentUser(&list)
-
-	suite.Nil(err)
-	suite.Equal(user, list.User)
-}

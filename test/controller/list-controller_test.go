@@ -41,7 +41,7 @@ func TestListControllerSuite(t *testing.T) {
 }
 
 func (suite *ListControllerTestSuite) TestSuccessIndex() {
-	var lists []model.List
+	lists := make([]model.List, 0)
 	suite.listServiceMock.EXPECT().Index(suite.ctx).Return(lists, nil)
 	suite.con.Index(suite.ctx)
 
