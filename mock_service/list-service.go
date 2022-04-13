@@ -50,6 +50,20 @@ func (mr *MockListServiceMockRecorder) Create(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockListService)(nil).Create), arg0)
 }
 
+// Destroy mocks base method.
+func (m *MockListService) Destroy(arg0 *gin.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Destroy", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Destroy indicates an expected call of Destroy.
+func (mr *MockListServiceMockRecorder) Destroy(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Destroy", reflect.TypeOf((*MockListService)(nil).Destroy), arg0)
+}
+
 // Index mocks base method.
 func (m *MockListService) Index(arg0 *gin.Context) ([]model.List, error) {
 	m.ctrl.T.Helper()

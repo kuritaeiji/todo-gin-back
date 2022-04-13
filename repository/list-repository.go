@@ -15,6 +15,7 @@ type listRepository struct {
 type ListRepository interface {
 	Create(*model.User, *model.List) error
 	Update(list *model.List, updatingList model.List) error
+	Destroy(*model.List) error
 	Find(id int) (model.List, error)
 	FindLists(*model.User) error
 	SetParentUser(*model.List) error
@@ -30,6 +31,22 @@ func (r *listRepository) Create(user *model.User, list *model.List) error {
 
 func (r *listRepository) Update(list *model.List, updatingList model.List) error {
 	return r.db.Model(&list).Select("title").Updates(updatingList).Error
+}
+
+func (r *listRepository) Destroy(list *model.List) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		err := r.db.Delete(&list).Error
+		if err != nil {
+			return err
+		}
+
+		err = r.db.Model(model.List{}).Where("lists.index > ? AND lists.user_id = ?", list.Index, list.UserID).Updates(map[string]interface{}{"index": gorm.Expr("lists.index - ?", 1)}).Error
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
 }
 
 func (r *listRepository) Find(id int) (model.List, error) {

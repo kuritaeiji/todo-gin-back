@@ -175,3 +175,61 @@ func (suite *ListServiceTestSuite) TestBadUpdateWithDBError() {
 
 	suite.Equal(err, rerr)
 }
+
+func (suite *ListServiceTestSuite) TestSuccessDestroy() {
+	id := 1
+	suite.ctx.Params = gin.Params{gin.Param{Key: "id", Value: strconv.Itoa(id)}}
+	list := factory.NewList(&factory.ListConfig{})
+	suite.listRepositoryMock.EXPECT().Find(id).Return(list, nil)
+	currentUser := factory.NewUser(&factory.UserConfig{})
+	suite.ctx.Set(config.CurrentUserKey, currentUser)
+	list.UserID = currentUser.ID
+	suite.listRepositoryMock.EXPECT().Destroy(&list).Return(nil)
+	err := suite.service.Destroy(suite.ctx)
+
+	suite.Nil(err)
+}
+
+func (suite *ListServiceTestSuite) TestBadDestroyWithIDToIntError() {
+	suite.ctx.Params = gin.Params{gin.Param{Key: "id", Value: ""}}
+	err := suite.service.Destroy(suite.ctx)
+
+	suite.IsType(&strconv.NumError{}, err)
+}
+
+func (suite *ListServiceTestSuite) TestBadDestroyWithRecordNotFoundError() {
+	id := 1
+	suite.ctx.Params = gin.Params{gin.Param{Key: "id", Value: strconv.Itoa(id)}}
+	suite.listRepositoryMock.EXPECT().Find(id).Return(model.List{}, gorm.ErrRecordNotFound)
+	err := suite.service.Destroy(suite.ctx)
+
+	suite.Equal(gorm.ErrRecordNotFound, err)
+}
+
+func (suite *ListServiceTestSuite) TestBadDestroyWithForbiddenError() {
+	id := 1
+	suite.ctx.Params = gin.Params{gin.Param{Key: "id", Value: strconv.Itoa(id)}}
+	currentUser := factory.NewUser(&factory.UserConfig{})
+	list := factory.NewList(&factory.ListConfig{})
+	list.UserID = currentUser.ID + 1
+	suite.listRepositoryMock.EXPECT().Find(id).Return(list, nil)
+	suite.ctx.Set(config.CurrentUserKey, currentUser)
+	err := suite.service.Destroy(suite.ctx)
+
+	suite.Equal(config.ForbiddenError, err)
+}
+
+func (suite *ListServiceTestSuite) TestBadDestroyWithDBError() {
+	id := 1
+	suite.ctx.Params = gin.Params{gin.Param{Key: "id", Value: strconv.Itoa(id)}}
+	currentUser := factory.NewUser(&factory.UserConfig{})
+	list := factory.NewList(&factory.ListConfig{})
+	list.UserID = currentUser.ID
+	suite.listRepositoryMock.EXPECT().Find(id).Return(list, nil)
+	suite.ctx.Set(config.CurrentUserKey, currentUser)
+	err := errors.New("db error")
+	suite.listRepositoryMock.EXPECT().Destroy(&list).Return(err)
+	rerr := suite.service.Destroy(suite.ctx)
+
+	suite.Equal(err, rerr)
+}

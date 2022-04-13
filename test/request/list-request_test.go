@@ -12,6 +12,7 @@ import (
 	"github.com/kuritaeiji/todo-gin-back/db"
 	"github.com/kuritaeiji/todo-gin-back/factory"
 	"github.com/kuritaeiji/todo-gin-back/model"
+	"github.com/kuritaeiji/todo-gin-back/repository"
 	"github.com/kuritaeiji/todo-gin-back/server"
 	"github.com/kuritaeiji/todo-gin-back/validators"
 	"github.com/stretchr/testify/suite"
@@ -20,9 +21,10 @@ import (
 
 type ListRequestTestSuite struct {
 	suite.Suite
-	router *gin.Engine
-	rec    *httptest.ResponseRecorder
-	db     *gorm.DB
+	router     *gin.Engine
+	rec        *httptest.ResponseRecorder
+	db         *gorm.DB
+	repository repository.ListRepository
 }
 
 func (suite *ListRequestTestSuite) SetupSuite() {
@@ -32,6 +34,7 @@ func (suite *ListRequestTestSuite) SetupSuite() {
 	db.Init()
 	suite.router = server.RouterSetup(controller.NewUserController())
 	suite.db = db.GetDB()
+	suite.repository = repository.NewListRepository()
 }
 
 func (suite *ListRequestTestSuite) SetupTest() {
@@ -149,4 +152,44 @@ func (suite *ListRequestTestSuite) TestBadUpdateWithValidationError() {
 
 	suite.Equal(config.ValidationErrorResponse.Code, suite.rec.Code)
 	suite.Contains(suite.rec.Body.String(), config.ValidationErrorResponse.Json["content"])
+}
+
+func (suite *ListRequestTestSuite) TestSuccessDestroy() {
+	user := factory.CreateUser(&factory.UserConfig{})
+	token := factory.CreateAccessToken(user)
+	list := factory.CreateList(&factory.ListConfig{}, user)
+	list2 := factory.CreateList(&factory.ListConfig{Index: 1}, user)
+	req := httptest.NewRequest("DELETE", fmt.Sprintf("/api/lists/%v", list.ID), nil)
+	req.Header.Add(config.TokenHeader, token)
+	suite.router.ServeHTTP(suite.rec, req)
+
+	suite.Equal(200, suite.rec.Code)
+	_, err := suite.repository.Find(list.ID)
+	suite.Equal(gorm.ErrRecordNotFound, err)
+	rList2, _ := suite.repository.Find(list2.ID)
+	suite.Equal(list2.Index-1, rList2.Index)
+}
+
+func (suite *ListRequestTestSuite) TestBadDestroyWithNotRecordFound() {
+	user := factory.CreateUser(&factory.UserConfig{})
+	token := factory.CreateAccessToken(user)
+	req := httptest.NewRequest("DELETE", "/api/lists/1", nil)
+	req.Header.Add(config.TokenHeader, token)
+	suite.router.ServeHTTP(suite.rec, req)
+
+	suite.Equal(config.RecordNotFoundErrorResponse.Code, suite.rec.Code)
+	suite.Contains(suite.rec.Body.String(), config.RecordNotFoundErrorResponse.Json["content"])
+}
+
+func (suite *ListRequestTestSuite) TestBadDestroyWithForbiddenError() {
+	user := factory.CreateUser(&factory.UserConfig{})
+	token := factory.CreateAccessToken(user)
+	otherUser := factory.CreateUser(&factory.UserConfig{})
+	list := factory.CreateList(&factory.ListConfig{}, otherUser)
+	req := httptest.NewRequest("DELETE", fmt.Sprintf("/api/lists/%v", list.ID), nil)
+	req.Header.Add(config.TokenHeader, token)
+	suite.router.ServeHTTP(suite.rec, req)
+
+	suite.Equal(config.ForbiddenErrorResponse.Code, suite.rec.Code)
+	suite.Contains(suite.rec.Body.String(), config.ForbiddenErrorResponse.Json["content"])
 }

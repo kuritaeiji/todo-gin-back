@@ -43,6 +43,7 @@ func RouterSetup(userController controller.UserController) *gin.Engine {
 			list.GET("", listCon.Index)
 			list.POST("", listCon.Create)
 			list.PUT("/:id", listCon.Update)
+			list.DELETE("/:id", listCon.Destroy)
 		}
 	}
 

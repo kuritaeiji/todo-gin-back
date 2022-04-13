@@ -121,3 +121,33 @@ func (suite *ListControllerTestSuite) TestBadUpdateWithValidationError() {
 	suite.Equal(config.ValidationErrorResponse.Code, suite.rec.Code)
 	suite.Contains(suite.rec.Body.String(), config.ValidationErrorResponse.Json["content"])
 }
+
+func (suite *ListControllerTestSuite) TestSuccessDestroy() {
+	suite.listServiceMock.EXPECT().Destroy(suite.ctx).Return(nil)
+	suite.con.Destroy(suite.ctx)
+
+	suite.Equal(200, suite.rec.Code)
+}
+
+func (suite *ListControllerTestSuite) TestBadDestroyWithRecordNotFound() {
+	suite.listServiceMock.EXPECT().Destroy(suite.ctx).Return(gorm.ErrRecordNotFound)
+	suite.con.Destroy(suite.ctx)
+
+	suite.Equal(config.RecordNotFoundErrorResponse.Code, suite.rec.Code)
+	suite.Contains(suite.rec.Body.String(), config.RecordNotFoundErrorResponse.Json["content"])
+}
+
+func (suite *ListControllerTestSuite) TestBadDestroyWithForbiddenError() {
+	suite.listServiceMock.EXPECT().Destroy(suite.ctx).Return(config.ForbiddenError)
+	suite.con.Destroy(suite.ctx)
+
+	suite.Equal(config.ForbiddenErrorResponse.Code, suite.rec.Code)
+	suite.Contains(suite.rec.Body.String(), config.ForbiddenErrorResponse.Json["content"])
+}
+
+func (suite *ListControllerTestSuite) TestBadDestroyWithOtherError() {
+	suite.listServiceMock.EXPECT().Destroy(suite.ctx).Return(errors.New("error"))
+	suite.con.Destroy(suite.ctx)
+
+	suite.Equal(500, suite.rec.Code)
+}

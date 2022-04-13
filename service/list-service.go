@@ -20,6 +20,7 @@ type ListService interface {
 	Index(*gin.Context) ([]model.List, error)
 	Create(*gin.Context) (model.List, error)
 	Update(*gin.Context) (model.List, error)
+	Destroy(*gin.Context) error
 }
 
 func NewListService() ListService {
@@ -80,6 +81,25 @@ func (s *listService) Update(ctx *gin.Context) (model.List, error) {
 	}
 
 	return list, nil
+}
+
+func (s *listService) Destroy(ctx *gin.Context) error {
+	id, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		return err
+	}
+
+	list, err := s.rep.Find(id)
+	if err != nil {
+		return err
+	}
+
+	currentUser := ctx.MustGet(config.CurrentUserKey).(model.User)
+	if !currentUser.HasList(list) {
+		return config.ForbiddenError
+	}
+
+	return s.rep.Destroy(&list)
 }
 
 // test

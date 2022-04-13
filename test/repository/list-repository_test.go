@@ -57,6 +57,20 @@ func (suite *ListRepositoryTestSuite) TestSuccessUpdate() {
 	suite.Equal(1, list.Index)
 }
 
+func (suite *ListRepositoryTestSuite) TestSuccessDestroy() {
+	user := factory.CreateUser(&factory.UserConfig{})
+	lists := make([]model.List, 0, 4)
+	for i := 0; i <= 3; i++ {
+		lists = append(lists, factory.CreateList(&factory.ListConfig{Index: i}, user))
+	}
+	suite.repository.Destroy(&lists[3])
+
+	// _, err := suite.repository.Find(lists[2].ID)
+	// suite.Equal(gorm.ErrRecordNotFound, err)
+	// list3, _ := suite.repository.Find(lists[3].ID)
+	// suite.Equal(2, list3.Index)
+}
+
 func (suite *ListRepositoryTestSuite) TestSuccessFind() {
 	user := factory.CreateUser(&factory.UserConfig{})
 	list := factory.CreateList(&factory.ListConfig{}, user)
