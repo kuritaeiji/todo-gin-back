@@ -14,6 +14,7 @@ import (
 	"github.com/kuritaeiji/todo-gin-back/mock_service"
 	"github.com/kuritaeiji/todo-gin-back/model"
 	"github.com/stretchr/testify/suite"
+	"gorm.io/gorm"
 )
 
 type ListControllerTestSuite struct {
@@ -84,4 +85,39 @@ func (suite *ListControllerTestSuite) TestBadCreateWithDBError() {
 	suite.con.Create(suite.ctx)
 
 	suite.Equal(500, suite.rec.Code)
+}
+
+func (suite *ListControllerTestSuite) TestSuccessUpdate() {
+	var list model.List
+	suite.listServiceMock.EXPECT().Update(suite.ctx).Return(list, nil)
+	suite.con.Update(suite.ctx)
+
+	suite.Equal(200, suite.rec.Code)
+	var rList model.List
+	json.Unmarshal(suite.rec.Body.Bytes(), &rList)
+	suite.Equal(list, rList)
+}
+
+func (suite *ListControllerTestSuite) TestBadUpdateWithRecordNotFound() {
+	suite.listServiceMock.EXPECT().Update(suite.ctx).Return(model.List{}, gorm.ErrRecordNotFound)
+	suite.con.Update(suite.ctx)
+
+	suite.Equal(config.RecordNotFoundErrorResponse.Code, suite.rec.Code)
+	suite.Contains(suite.rec.Body.String(), config.RecordNotFoundErrorResponse.Json["content"])
+}
+
+func (suite *ListControllerTestSuite) TestBadUpdateWithForbiddenError() {
+	suite.listServiceMock.EXPECT().Update(suite.ctx).Return(model.List{}, config.ForbiddenError)
+	suite.con.Update(suite.ctx)
+
+	suite.Equal(config.ForbiddenErrorResponse.Code, suite.rec.Code)
+	suite.Contains(suite.rec.Body.String(), config.ForbiddenErrorResponse.Json["content"])
+}
+
+func (suite *ListControllerTestSuite) TestBadUpdateWithValidationError() {
+	suite.listServiceMock.EXPECT().Update(suite.ctx).Return(model.List{}, validator.ValidationErrors{})
+	suite.con.Update(suite.ctx)
+
+	suite.Equal(config.ValidationErrorResponse.Code, suite.rec.Code)
+	suite.Contains(suite.rec.Body.String(), config.ValidationErrorResponse.Json["content"])
 }

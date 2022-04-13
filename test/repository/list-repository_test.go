@@ -46,6 +46,27 @@ func (suite *ListRepositoryTestSuite) TestSuccessCreate() {
 	suite.Equal(list.Title, user.Lists[0].Title)
 }
 
+func (suite *ListRepositoryTestSuite) TestSuccessUpdate() {
+	user := factory.CreateUser(&factory.UserConfig{})
+	list := factory.CreateList(&factory.ListConfig{Index: 1}, user)
+	updatingList := factory.NewList(&factory.ListConfig{Title: "test title"})
+	err := suite.repository.Update(&list, updatingList)
+
+	suite.Nil(err)
+	suite.Equal(updatingList.Title, list.Title)
+	suite.Equal(1, list.Index)
+}
+
+func (suite *ListRepositoryTestSuite) TestSuccessFind() {
+	user := factory.CreateUser(&factory.UserConfig{})
+	list := factory.CreateList(&factory.ListConfig{}, user)
+	rList, err := suite.repository.Find(list.ID)
+
+	suite.Nil(err)
+	suite.Equal(list.Title, rList.Title)
+	suite.Equal(list.ID, rList.ID)
+}
+
 func (suite *ListRepositoryTestSuite) TestSuccessFindLists() {
 	user := factory.CreateUser(&factory.UserConfig{})
 	list1 := factory.CreateList(&factory.ListConfig{}, user)
@@ -54,4 +75,13 @@ func (suite *ListRepositoryTestSuite) TestSuccessFindLists() {
 
 	suite.Nil(err)
 	suite.Equal([]model.List{list1, list2}, user.Lists)
+}
+
+func (suite *ListRepositoryTestSuite) TestSuccessSetParentUser() {
+	user := factory.CreateUser(&factory.UserConfig{})
+	list := factory.CreateList(&factory.ListConfig{}, user)
+	err := suite.repository.SetParentUser(&list)
+
+	suite.Nil(err)
+	suite.Equal(user, list.User)
 }

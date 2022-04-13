@@ -14,7 +14,10 @@ type listRepository struct {
 
 type ListRepository interface {
 	Create(*model.User, *model.List) error
+	Update(list *model.List, updatingList model.List) error
+	Find(id int) (model.List, error)
 	FindLists(*model.User) error
+	SetParentUser(*model.List) error
 }
 
 func NewListRepository() ListRepository {
@@ -25,6 +28,20 @@ func (r *listRepository) Create(user *model.User, list *model.List) error {
 	return r.db.Model(user).Association("Lists").Append(list)
 }
 
+func (r *listRepository) Update(list *model.List, updatingList model.List) error {
+	return r.db.Model(&list).Select("title").Updates(updatingList).Error
+}
+
+func (r *listRepository) Find(id int) (model.List, error) {
+	var list model.List
+	err := r.db.First(&list, id).Error
+	return list, err
+}
+
 func (r *listRepository) FindLists(user *model.User) error {
 	return r.db.Where(model.List{UserID: user.ID}).Order("lists.index ASC").Find(&user.Lists).Error
+}
+
+func (r *listRepository) SetParentUser(list *model.List) error {
+	return r.db.First(&list.User, list.UserID).Error
 }

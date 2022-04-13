@@ -2,6 +2,7 @@ package request_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http/httptest"
 	"testing"
 
@@ -89,6 +90,60 @@ func (suite *ListRequestTestSuite) TestBadCreateWithValidationError() {
 	token := factory.CreateAccessToken(user)
 	body := factory.CreateListRequestBody(&factory.ListConfig{NotUseDefaultValue: true})
 	req := httptest.NewRequest("POST", "/api/lists", body)
+	req.Header.Add(config.TokenHeader, token)
+	suite.router.ServeHTTP(suite.rec, req)
+
+	suite.Equal(config.ValidationErrorResponse.Code, suite.rec.Code)
+	suite.Contains(suite.rec.Body.String(), config.ValidationErrorResponse.Json["content"])
+}
+
+func (suite *ListRequestTestSuite) TestSuccessUpdate() {
+	user := factory.CreateUser(&factory.UserConfig{})
+	token := factory.CreateAccessToken(user)
+	list := factory.CreateList(&factory.ListConfig{}, user)
+	updatingListConfig := &factory.ListConfig{Title: "test title"}
+	body := factory.CreateListRequestBody(updatingListConfig)
+	req := httptest.NewRequest("PUT", fmt.Sprintf("/api/lists/%v", list.ID), body)
+	req.Header.Add(config.TokenHeader, token)
+	suite.router.ServeHTTP(suite.rec, req)
+
+	suite.Equal(200, suite.rec.Code)
+	var rList model.List
+	json.Unmarshal(suite.rec.Body.Bytes(), &rList)
+	suite.Equal(list.ID, rList.ID)
+	suite.Equal(updatingListConfig.Title, rList.Title)
+}
+
+func (suite *ListRequestTestSuite) TestBadUpdateWithListRecordNotFound() {
+	user := factory.CreateUser(&factory.UserConfig{})
+	token := factory.CreateAccessToken(user)
+	req := httptest.NewRequest("PUT", "/api/lists/1", nil)
+	req.Header.Add(config.TokenHeader, token)
+	suite.router.ServeHTTP(suite.rec, req)
+
+	suite.Equal(config.RecordNotFoundErrorResponse.Code, suite.rec.Code)
+	suite.Contains(suite.rec.Body.String(), config.RecordNotFoundErrorResponse.Json["content"])
+}
+
+func (suite *ListRequestTestSuite) TestBadUpdateWithForbidden() {
+	user := factory.CreateUser(&factory.UserConfig{})
+	token := factory.CreateAccessToken(user)
+	otherUser := factory.CreateUser(&factory.UserConfig{})
+	list := factory.CreateList(&factory.ListConfig{}, otherUser)
+	req := httptest.NewRequest("PUT", fmt.Sprintf("/api/lists/%v", list.ID), nil)
+	req.Header.Add(config.TokenHeader, token)
+	suite.router.ServeHTTP(suite.rec, req)
+
+	suite.Equal(config.ForbiddenErrorResponse.Code, suite.rec.Code)
+	suite.Contains(suite.rec.Body.String(), config.ForbiddenErrorResponse.Json["content"])
+}
+
+func (suite *ListRequestTestSuite) TestBadUpdateWithValidationError() {
+	user := factory.CreateUser(&factory.UserConfig{})
+	token := factory.CreateAccessToken(user)
+	list := factory.CreateList(&factory.ListConfig{}, user)
+	body := factory.CreateListRequestBody(&factory.ListConfig{NotUseDefaultValue: true})
+	req := httptest.NewRequest("PUT", fmt.Sprintf("/api/lists/%v", list.ID), body)
 	req.Header.Add(config.TokenHeader, token)
 	suite.router.ServeHTTP(suite.rec, req)
 

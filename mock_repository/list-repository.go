@@ -48,6 +48,21 @@ func (mr *MockListRepositoryMockRecorder) Create(arg0, arg1 interface{}) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockListRepository)(nil).Create), arg0, arg1)
 }
 
+// Find mocks base method.
+func (m *MockListRepository) Find(id int) (model.List, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Find", id)
+	ret0, _ := ret[0].(model.List)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Find indicates an expected call of Find.
+func (mr *MockListRepositoryMockRecorder) Find(id interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Find", reflect.TypeOf((*MockListRepository)(nil).Find), id)
+}
+
 // FindLists mocks base method.
 func (m *MockListRepository) FindLists(arg0 *model.User) error {
 	m.ctrl.T.Helper()
@@ -60,4 +75,32 @@ func (m *MockListRepository) FindLists(arg0 *model.User) error {
 func (mr *MockListRepositoryMockRecorder) FindLists(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindLists", reflect.TypeOf((*MockListRepository)(nil).FindLists), arg0)
+}
+
+// SetParentUser mocks base method.
+func (m *MockListRepository) SetParentUser(arg0 *model.List) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetParentUser", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetParentUser indicates an expected call of SetParentUser.
+func (mr *MockListRepositoryMockRecorder) SetParentUser(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetParentUser", reflect.TypeOf((*MockListRepository)(nil).SetParentUser), arg0)
+}
+
+// Update mocks base method.
+func (m *MockListRepository) Update(list *model.List, updatingList model.List) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Update", list, updatingList)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Update indicates an expected call of Update.
+func (mr *MockListRepositoryMockRecorder) Update(list, updatingList interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockListRepository)(nil).Update), list, updatingList)
 }

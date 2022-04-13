@@ -5,6 +5,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/kuritaeiji/todo-gin-back/config"
 	"github.com/kuritaeiji/todo-gin-back/service"
+	"gorm.io/gorm"
 )
 
 type listController struct {
@@ -14,6 +15,7 @@ type listController struct {
 type ListController interface {
 	Index(*gin.Context)  // GET /api/lists
 	Create(*gin.Context) // POST /api/lists
+	Update(*gin.Context) // PUT /api/lists/:id
 }
 
 func NewListController() ListController {
@@ -32,6 +34,32 @@ func (c *listController) Index(ctx *gin.Context) {
 
 func (c *listController) Create(ctx *gin.Context) {
 	list, err := c.service.Create(ctx)
+
+	if _, ok := err.(validator.ValidationErrors); ok {
+		ctx.AbortWithStatusJSON(config.ValidationErrorResponse.Code, config.ValidationErrorResponse.Json)
+		return
+	}
+
+	if err != nil {
+		ctx.AbortWithStatus(500)
+		return
+	}
+
+	ctx.JSON(200, list)
+}
+
+func (c *listController) Update(ctx *gin.Context) {
+	list, err := c.service.Update(ctx)
+
+	if err == gorm.ErrRecordNotFound {
+		ctx.AbortWithStatusJSON(config.RecordNotFoundErrorResponse.Code, config.RecordNotFoundErrorResponse.Json)
+		return
+	}
+
+	if err == config.ForbiddenError {
+		ctx.AbortWithStatusJSON(config.ForbiddenErrorResponse.Code, config.ForbiddenErrorResponse.Json)
+		return
+	}
 
 	if _, ok := err.(validator.ValidationErrors); ok {
 		ctx.AbortWithStatusJSON(config.ValidationErrorResponse.Code, config.ValidationErrorResponse.Json)

@@ -23,3 +23,7 @@ func (user *User) Authenticate(password string) bool {
 
 	return false
 }
+
+func (user *User) HasList(list List) bool {
+	return user.ID == list.UserID
+}
