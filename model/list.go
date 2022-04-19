@@ -16,10 +16,8 @@ type List struct {
 
 func (list *List) ToJson() gin.H {
 	return gin.H{
-		"id":     list.ID,
-		"title":  list.Title,
-		"index":  list.Index,
-		"userID": list.UserID,
+		"id":    list.ID,
+		"title": list.Title,
 	}
 }
 
