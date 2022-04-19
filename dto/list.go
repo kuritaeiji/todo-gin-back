@@ -13,3 +13,7 @@ func (dtoList List) Transfer(list *model.List) {
 	list.Title = dtoList.Title
 	list.Index = dtoList.Index
 }
+
+type MoveList struct {
+	Index int `json:"index" binding:"gte=0"`
+}

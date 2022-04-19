@@ -233,3 +233,80 @@ func (suite *ListServiceTestSuite) TestBadDestroyWithDBError() {
 
 	suite.Equal(err, rerr)
 }
+
+func (suite *ListServiceTestSuite) TestSuccessMove() {
+	listID := 1
+	list := factory.NewList(&factory.ListConfig{})
+	suite.ctx.Params = gin.Params{gin.Param{Key: "id", Value: strconv.Itoa(listID)}}
+	suite.listRepositoryMock.EXPECT().Find(listID).Return(list, nil)
+	user := factory.NewUser(&factory.UserConfig{})
+	suite.ctx.Set(config.CurrentUserKey, user)
+	list.UserID = user.ID
+	toIndex := 1
+	req := httptest.NewRequest("PUT", "/api/lists/1/move", factory.CreateListRequestBody(&factory.ListConfig{Index: toIndex}))
+	suite.ctx.Request = req
+	suite.listRepositoryMock.EXPECT().Move(&list, toIndex, &user).Return(nil)
+	err := suite.service.Move(suite.ctx)
+
+	suite.Nil(err)
+}
+
+func (suite *ListServiceTestSuite) TestBadMoveWithIDToIntError() {
+	suite.ctx.Params = gin.Params{gin.Param{Key: "id", Value: "invalid id"}}
+	err := suite.service.Move(suite.ctx)
+	suite.IsType(&strconv.NumError{}, err)
+}
+
+func (suite *ListServiceTestSuite) TestBadMoveWithRecordNotFoundError() {
+	listID := 1
+	suite.ctx.Params = gin.Params{gin.Param{Key: "id", Value: strconv.Itoa(listID)}}
+	suite.listRepositoryMock.EXPECT().Find(listID).Return(model.List{}, gorm.ErrRecordNotFound)
+	err := suite.service.Move(suite.ctx)
+	suite.Equal(gorm.ErrRecordNotFound, err)
+}
+
+func (suite *ListServiceTestSuite) TestBadMoveWithForbiddenError() {
+	listID := 1
+	suite.ctx.Params = gin.Params{gin.Param{Key: "id", Value: strconv.Itoa(listID)}}
+	list := factory.NewList(&factory.ListConfig{})
+	suite.listRepositoryMock.EXPECT().Find(listID).Return(list, nil)
+	currentUser := factory.NewUser(&factory.UserConfig{})
+	currentUser.ID = list.UserID + 1
+	suite.ctx.Set(config.CurrentUserKey, currentUser)
+	err := suite.service.Move(suite.ctx)
+
+	suite.Equal(config.ForbiddenError, err)
+}
+
+func (suite *ListServiceTestSuite) TestBadMoveWithValidationError() {
+	listID := 1
+	suite.ctx.Params = gin.Params{gin.Param{Key: "id", Value: strconv.Itoa(listID)}}
+	list := factory.NewList(&factory.ListConfig{})
+	suite.listRepositoryMock.EXPECT().Find(listID).Return(list, nil)
+	currentUser := factory.NewUser(&factory.UserConfig{})
+	suite.ctx.Set(config.CurrentUserKey, currentUser)
+	currentUser.ID = list.UserID
+	req := httptest.NewRequest("PUT", "/api/lists/1/move", factory.CreateListRequestBody(&factory.ListConfig{Index: -1}))
+	suite.ctx.Request = req
+	err := suite.service.Move(suite.ctx)
+
+	suite.IsType(validator.ValidationErrors{}, err)
+}
+
+func (suite *ListServiceTestSuite) TestBadMoveWithDBError() {
+	listID := 1
+	suite.ctx.Params = gin.Params{gin.Param{Key: "id", Value: strconv.Itoa(listID)}}
+	list := factory.NewList(&factory.ListConfig{})
+	suite.listRepositoryMock.EXPECT().Find(listID).Return(list, nil)
+	currentUser := factory.NewUser(&factory.UserConfig{})
+	suite.ctx.Set(config.CurrentUserKey, currentUser)
+	currentUser.ID = list.UserID
+	toIndex := 1
+	req := httptest.NewRequest("PUT", "/api/lists/1/move", factory.CreateListRequestBody(&factory.ListConfig{Index: toIndex}))
+	suite.ctx.Request = req
+	err := errors.New("db error")
+	suite.listRepositoryMock.EXPECT().Move(&list, toIndex, &currentUser).Return(err)
+	rerr := suite.service.Move(suite.ctx)
+
+	suite.Equal(err, rerr)
+}

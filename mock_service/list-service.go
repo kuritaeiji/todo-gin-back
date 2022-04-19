@@ -79,6 +79,20 @@ func (mr *MockListServiceMockRecorder) Index(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Index", reflect.TypeOf((*MockListService)(nil).Index), arg0)
 }
 
+// Move mocks base method.
+func (m *MockListService) Move(arg0 *gin.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Move", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Move indicates an expected call of Move.
+func (mr *MockListServiceMockRecorder) Move(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Move", reflect.TypeOf((*MockListService)(nil).Move), arg0)
+}
+
 // Update mocks base method.
 func (m *MockListService) Update(arg0 *gin.Context) (model.List, error) {
 	m.ctrl.T.Helper()

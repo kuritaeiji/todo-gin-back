@@ -18,6 +18,7 @@ type ListController interface {
 	Create(*gin.Context)  // POST /api/lists
 	Update(*gin.Context)  // PUT /api/lists/:id
 	Destroy(*gin.Context) // DELETE /api/lists/:id
+	Move(*gin.Context)    // PUT /api/lists/:id/move
 }
 
 func NewListController() ListController {
@@ -79,6 +80,26 @@ func (c *listController) Update(ctx *gin.Context) {
 func (c *listController) Destroy(ctx *gin.Context) {
 	err := c.service.Destroy(ctx)
 
+	if err == gorm.ErrRecordNotFound {
+		ctx.AbortWithStatusJSON(config.RecordNotFoundErrorResponse.Code, config.RecordNotFoundErrorResponse.Json)
+		return
+	}
+
+	if err == config.ForbiddenError {
+		ctx.AbortWithStatusJSON(config.ForbiddenErrorResponse.Code, config.ForbiddenErrorResponse.Json)
+		return
+	}
+
+	if err != nil {
+		ctx.AbortWithStatus(500)
+		return
+	}
+
+	ctx.Status(200)
+}
+
+func (c *listController) Move(ctx *gin.Context) {
+	err := c.service.Move(ctx)
 	if err == gorm.ErrRecordNotFound {
 		ctx.AbortWithStatusJSON(config.RecordNotFoundErrorResponse.Code, config.RecordNotFoundErrorResponse.Json)
 		return

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -188,6 +189,78 @@ func (suite *ListRequestTestSuite) TestBadDestroyWithForbiddenError() {
 	otherUser := factory.CreateUser(&factory.UserConfig{})
 	list := factory.CreateList(&factory.ListConfig{}, otherUser)
 	req := httptest.NewRequest("DELETE", fmt.Sprintf("/api/lists/%v", list.ID), nil)
+	req.Header.Add(config.TokenHeader, token)
+	suite.router.ServeHTTP(suite.rec, req)
+
+	suite.Equal(config.ForbiddenErrorResponse.Code, suite.rec.Code)
+	suite.Contains(suite.rec.Body.String(), config.ForbiddenErrorResponse.Json["content"])
+}
+
+func (suite *ListRequestTestSuite) TestSuccessMoveWhenIncreaseIndex() {
+	user := factory.CreateUser(&factory.UserConfig{})
+	token := factory.CreateAccessToken(user)
+	lists := make([]model.List, 0, 5)
+	for i := 0; i <= 4; i++ {
+		lists = append(lists, factory.CreateList(&factory.ListConfig{Index: i, Title: strconv.Itoa(i)}, user))
+	}
+	requestParams := struct {
+		id    int
+		index int
+	}{id: lists[1].ID, index: 3}
+	req := httptest.NewRequest("PUT", fmt.Sprintf("/api/lists/%v/move", requestParams.id), factory.CreateListRequestBody(&factory.ListConfig{Index: requestParams.index}))
+	req.Header.Add(config.TokenHeader, token)
+	suite.router.ServeHTTP(suite.rec, req)
+
+	suite.Equal(200, suite.rec.Code)
+	suite.repository.FindLists(&user)
+	suite.Equal("0", user.Lists[0].Title)
+	suite.Equal("2", user.Lists[1].Title)
+	suite.Equal("3", user.Lists[2].Title)
+	suite.Equal("1", user.Lists[3].Title)
+	suite.Equal("4", user.Lists[4].Title)
+}
+
+func (suite *ListRequestTestSuite) TestSuccessMoveWhenDecreaseIndex() {
+	user := factory.CreateUser(&factory.UserConfig{})
+	token := factory.CreateAccessToken(user)
+	lists := make([]model.List, 0, 5)
+	for i := 0; i <= 4; i++ {
+		lists = append(lists, factory.CreateList(&factory.ListConfig{Index: i, Title: strconv.Itoa(i)}, user))
+	}
+	requestParams := struct {
+		id    int
+		index int
+	}{id: lists[3].ID, index: 1}
+	req := httptest.NewRequest("PUT", fmt.Sprintf("/api/lists/%v/move", requestParams.id), factory.CreateListRequestBody(&factory.ListConfig{Index: requestParams.index}))
+	req.Header.Add(config.TokenHeader, token)
+	suite.router.ServeHTTP(suite.rec, req)
+
+	suite.Equal(200, suite.rec.Code)
+	suite.repository.FindLists(&user)
+	suite.Equal("0", user.Lists[0].Title)
+	suite.Equal("3", user.Lists[1].Title)
+	suite.Equal("1", user.Lists[2].Title)
+	suite.Equal("2", user.Lists[3].Title)
+	suite.Equal("4", user.Lists[4].Title)
+}
+
+func (suite *ListRequestTestSuite) TestBadMoveWithNotFoundList() {
+	user := factory.CreateUser(&factory.UserConfig{})
+	token := factory.CreateAccessToken(user)
+	req := httptest.NewRequest("PUT", "/api/lists/1/move", nil)
+	req.Header.Add(config.TokenHeader, token)
+	suite.router.ServeHTTP(suite.rec, req)
+
+	suite.Equal(config.RecordNotFoundErrorResponse.Code, suite.rec.Code)
+	suite.Contains(suite.rec.Body.String(), config.RecordNotFoundErrorResponse.Json["content"])
+}
+
+func (suite *ListRequestTestSuite) TestBadMoveWithForbiddenError() {
+	user := factory.CreateUser(&factory.UserConfig{})
+	otherUser := factory.CreateUser(&factory.UserConfig{})
+	token := factory.CreateAccessToken(user)
+	list := factory.CreateList(&factory.ListConfig{}, otherUser)
+	req := httptest.NewRequest("PUT", fmt.Sprintf("/api/lists/%v/move", list.ID), nil)
 	req.Header.Add(config.TokenHeader, token)
 	suite.router.ServeHTTP(suite.rec, req)
 

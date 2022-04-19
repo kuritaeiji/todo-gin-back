@@ -151,3 +151,33 @@ func (suite *ListControllerTestSuite) TestBadDestroyWithOtherError() {
 
 	suite.Equal(500, suite.rec.Code)
 }
+
+func (suite *ListControllerTestSuite) TestSuccessMove() {
+	suite.listServiceMock.EXPECT().Move(suite.ctx).Return(nil)
+	suite.con.Move(suite.ctx)
+
+	suite.Equal(200, suite.rec.Code)
+}
+
+func (suite *ListControllerTestSuite) TestBadMoveWithListNotFound() {
+	suite.listServiceMock.EXPECT().Move(suite.ctx).Return(gorm.ErrRecordNotFound)
+	suite.con.Move(suite.ctx)
+
+	suite.Equal(config.RecordNotFoundErrorResponse.Code, suite.rec.Code)
+	suite.Contains(suite.rec.Body.String(), config.RecordNotFoundErrorResponse.Json["content"])
+}
+
+func (suite *ListControllerTestSuite) TestBadMoveForbiddenError() {
+	suite.listServiceMock.EXPECT().Move(suite.ctx).Return(config.ForbiddenError)
+	suite.con.Move(suite.ctx)
+
+	suite.Equal(config.ForbiddenErrorResponse.Code, suite.rec.Code)
+	suite.Contains(suite.rec.Body.String(), config.ForbiddenErrorResponse.Json["content"])
+}
+
+func (suite *ListControllerTestSuite) TestBadMoveOtherError() {
+	suite.listServiceMock.EXPECT().Move(suite.ctx).Return(errors.New("other error"))
+	suite.con.Move(suite.ctx)
+
+	suite.Equal(500, suite.rec.Code)
+}
