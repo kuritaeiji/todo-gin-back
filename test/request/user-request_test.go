@@ -241,3 +241,16 @@ func (suite *UserRequestTestSuite) TestBadDestroyWithNotLoggedIn() {
 	suite.Equal(config.NotLoggedInErrorResponse.Code, suite.rec.Code)
 	suite.Contains(suite.rec.Body.String(), config.NotLoggedInErrorResponse.Json["content"])
 }
+
+func (suite *UserRequestTestSuite) TestDestroyListsWhenDestroyUser() {
+	user := factory.CreateUser(&factory.UserConfig{})
+	token := factory.CreateAccessToken(user)
+	factory.CreateList(&factory.ListConfig{}, user)
+	req := httptest.NewRequest("DELETE", "/api/users", nil)
+	req.Header.Add(config.TokenHeader, token)
+	suite.router.ServeHTTP(suite.rec, req)
+
+	var count int64
+	suite.db.Model(&model.List{}).Count(&count)
+	suite.Equal(int64(0), count)
+}

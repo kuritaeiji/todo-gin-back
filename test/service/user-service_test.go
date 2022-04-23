@@ -187,7 +187,7 @@ func (suite *UserServiceTestSuite) TestBadActivateWithDBError() {
 
 func (suite *UserServiceTestSuite) TestSuccessDestroy() {
 	currentUser := factory.NewUser(&factory.UserConfig{})
-	suite.ctx.Set("currentUser", currentUser)
+	suite.ctx.Set(config.CurrentUserKey, currentUser)
 	suite.userRepositoryMock.EXPECT().Destroy(&currentUser).Return(nil)
 	err := suite.service.Destroy(suite.ctx)
 	suite.Nil(err)
@@ -195,7 +195,7 @@ func (suite *UserServiceTestSuite) TestSuccessDestroy() {
 
 func (suite *UserServiceTestSuite) TestBadDestroyWithRepositoryReturnsError() {
 	currentUser := factory.NewUser(&factory.UserConfig{})
-	suite.ctx.Set("currentUser", currentUser)
+	suite.ctx.Set(config.CurrentUserKey, currentUser)
 	err := errors.New("error")
 	suite.userRepositoryMock.EXPECT().Destroy(&currentUser).Return(err)
 	returnErr := suite.service.Destroy(suite.ctx)

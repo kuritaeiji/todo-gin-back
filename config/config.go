@@ -9,8 +9,9 @@ import (
 )
 
 const (
-	TokenHeader = "Authorization"
-	Bearer      = "Bearer "
+	TokenHeader    = "Authorization"
+	Bearer         = "Bearer "
+	CurrentUserKey = "currentUser"
 )
 
 var (

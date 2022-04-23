@@ -11,6 +11,7 @@ var (
 	AlreadyActivatedUserError   = errors.New("alreay activated user")
 	PasswordAuthenticationError = errors.New("password is not authenticated")
 	EmailClientError            = errors.New("email client error")
+	ForbiddenError              = errors.New("forbidden")
 )
 
 type ErrorResponse struct {
@@ -72,6 +73,11 @@ var (
 	NotLoggedInErrorResponse = ErrorResponse{
 		Code: 401,
 		Json: createJson("user is not logged in"),
+	}
+
+	ForbiddenErrorResponse = ErrorResponse{
+		Code: 403,
+		Json: createJson(ForbiddenError.Error()),
 	}
 )
 

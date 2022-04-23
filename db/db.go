@@ -59,9 +59,11 @@ func CloseDB() {
 
 func migrate() {
 	db.AutoMigrate(model.User{})
+	db.AutoMigrate(model.List{})
 }
 
 // test
 func DeleteAll() {
+	db.Exec("DELETE FROM lists")
 	db.Exec("DELETE FROM users")
 }

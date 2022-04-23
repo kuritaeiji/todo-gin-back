@@ -103,13 +103,15 @@ func (suite *UserRepositoryTestSuite) TestBadFindByEmailWithRecordNotFound() {
 
 func (suite *UserRepositoryTestSuite) TestSuccessDestroy() {
 	user := factory.CreateUser(&factory.UserConfig{})
-	var count int64
-	suite.db.Model(&model.User{}).Count(&count)
-	suite.Equal(int64(1), count)
+	factory.CreateList(&factory.ListConfig{}, user)
 	err := suite.userRepository.Destroy(&user)
 
 	suite.Nil(err)
+	var count int64
 	suite.db.Model(&model.User{}).Count(&count)
+	suite.Equal(int64(0), count)
+
+	suite.db.Model(&model.List{}).Count(&count)
 	suite.Equal(int64(0), count)
 }
 

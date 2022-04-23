@@ -51,7 +51,7 @@ func (suite *AuthMiddlewareTestSuite) TestSuccessAuth() {
 	)
 	suite.userRepositoryMock.EXPECT().Find(user.ID).Return(user, nil)
 	req := httptest.NewRequest("POST", "/users", nil)
-	req.Header.Add(config.TokenHeader, config.Bearer+accessToken)
+	req.Header.Add(config.TokenHeader, accessToken)
 	suite.ctx.Request = req
 	suite.middleware.Auth(suite.ctx)
 
@@ -65,7 +65,7 @@ func (suite *AuthMiddlewareTestSuite) TestBadAuthWithExpiredJWT() {
 	var err error = verr
 	suite.jwtServiceMock.EXPECT().VerifyJWT(accessToken).Return(&service.UserClaim{}, err)
 	req := httptest.NewRequest("POST", "/users", nil)
-	req.Header.Add(config.TokenHeader, config.Bearer+accessToken)
+	req.Header.Add(config.TokenHeader, accessToken)
 	suite.ctx.Request = req
 	suite.middleware.Auth(suite.ctx)
 
@@ -79,7 +79,7 @@ func (suite *AuthMiddlewareTestSuite) TestBadAuthWithJWTValidationError() {
 	var err error = verr
 	suite.jwtServiceMock.EXPECT().VerifyJWT(accessToken).Return(&service.UserClaim{}, err)
 	req := httptest.NewRequest("POST", "/users", nil)
-	req.Header.Add(config.TokenHeader, config.Bearer+accessToken)
+	req.Header.Add(config.TokenHeader, accessToken)
 	suite.ctx.Request = req
 	suite.middleware.Auth(suite.ctx)
 
@@ -92,7 +92,7 @@ func (suite *AuthMiddlewareTestSuite) TestBadAuthWithNotRecordFound() {
 	suite.jwtServiceMock.EXPECT().VerifyJWT(accessToken).Return(&service.UserClaim{}, nil)
 	suite.userRepositoryMock.EXPECT().Find(0).Return(model.User{}, gorm.ErrRecordNotFound)
 	req := httptest.NewRequest("POST", "/users", nil)
-	req.Header.Add(config.TokenHeader, config.Bearer+accessToken)
+	req.Header.Add(config.TokenHeader, accessToken)
 	suite.ctx.Request = req
 	suite.middleware.Auth(suite.ctx)
 
@@ -110,7 +110,7 @@ func (suite *AuthMiddlewareTestSuite) TestSuccessGuest() {
 
 func (suite *AuthMiddlewareTestSuite) TestBadGuestWithLoggedIn() {
 	req := httptest.NewRequest("POST", "/users", nil)
-	req.Header.Add(config.TokenHeader, config.Bearer+"token")
+	req.Header.Add(config.TokenHeader, "token")
 	suite.ctx.Request = req
 	suite.middleware.Guest(suite.ctx)
 

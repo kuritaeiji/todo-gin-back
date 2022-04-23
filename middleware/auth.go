@@ -47,7 +47,7 @@ func (m *authMiddleware) Auth(ctx *gin.Context) {
 		return
 	}
 
-	ctx.Set("currentUser", currentUser)
+	ctx.Set(config.CurrentUserKey, currentUser)
 	ctx.Next()
 }
 
