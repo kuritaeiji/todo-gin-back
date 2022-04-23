@@ -60,10 +60,12 @@ func CloseDB() {
 func migrate() {
 	db.AutoMigrate(model.User{})
 	db.AutoMigrate(model.List{})
+	db.AutoMigrate(model.Card{})
 }
 
 // test
 func DeleteAll() {
+	db.Exec("DELETE FROM cards")
 	db.Exec("DELETE FROM lists")
 	db.Exec("DELETE FROM users")
 }
