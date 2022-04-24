@@ -12,6 +12,7 @@ const (
 	TokenHeader    = "Authorization"
 	Bearer         = "Bearer "
 	CurrentUserKey = "currentUser"
+	ListKey        = "list"
 )
 
 var (

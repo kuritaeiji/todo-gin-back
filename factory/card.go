@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/kuritaeiji/todo-gin-back/dto"
 	"github.com/kuritaeiji/todo-gin-back/model"
+	"github.com/kuritaeiji/todo-gin-back/repository"
 )
 
 type CardConfig struct {
@@ -43,10 +44,16 @@ func NewDtoCard(cardConfig *CardConfig) dto.Card {
 	}
 }
 
-func NewCard(CardConfig *CardConfig) model.Card {
-	dtoCard := NewDtoCard(CardConfig)
+func NewCard(cardConfig *CardConfig) model.Card {
+	dtoCard := NewDtoCard(cardConfig)
 	var card model.Card
 	dtoCard.Transfer(&card)
+	return card
+}
+
+func CreateCard(cardConfig *CardConfig, list model.List) model.Card {
+	card := NewCard(cardConfig)
+	repository.NewCardRepository().Create(&card, &list)
 	return card
 }
 
