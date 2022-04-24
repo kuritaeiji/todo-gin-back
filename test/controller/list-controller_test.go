@@ -14,7 +14,6 @@ import (
 	"github.com/kuritaeiji/todo-gin-back/mock_service"
 	"github.com/kuritaeiji/todo-gin-back/model"
 	"github.com/stretchr/testify/suite"
-	"gorm.io/gorm"
 )
 
 type ListControllerTestSuite struct {
@@ -98,22 +97,6 @@ func (suite *ListControllerTestSuite) TestSuccessUpdate() {
 	suite.Equal(list, rList)
 }
 
-func (suite *ListControllerTestSuite) TestBadUpdateWithRecordNotFound() {
-	suite.listServiceMock.EXPECT().Update(suite.ctx).Return(model.List{}, gorm.ErrRecordNotFound)
-	suite.con.Update(suite.ctx)
-
-	suite.Equal(config.RecordNotFoundErrorResponse.Code, suite.rec.Code)
-	suite.Contains(suite.rec.Body.String(), config.RecordNotFoundErrorResponse.Json["content"])
-}
-
-func (suite *ListControllerTestSuite) TestBadUpdateWithForbiddenError() {
-	suite.listServiceMock.EXPECT().Update(suite.ctx).Return(model.List{}, config.ForbiddenError)
-	suite.con.Update(suite.ctx)
-
-	suite.Equal(config.ForbiddenErrorResponse.Code, suite.rec.Code)
-	suite.Contains(suite.rec.Body.String(), config.ForbiddenErrorResponse.Json["content"])
-}
-
 func (suite *ListControllerTestSuite) TestBadUpdateWithValidationError() {
 	suite.listServiceMock.EXPECT().Update(suite.ctx).Return(model.List{}, validator.ValidationErrors{})
 	suite.con.Update(suite.ctx)
@@ -129,22 +112,6 @@ func (suite *ListControllerTestSuite) TestSuccessDestroy() {
 	suite.Equal(200, suite.rec.Code)
 }
 
-func (suite *ListControllerTestSuite) TestBadDestroyWithRecordNotFound() {
-	suite.listServiceMock.EXPECT().Destroy(suite.ctx).Return(gorm.ErrRecordNotFound)
-	suite.con.Destroy(suite.ctx)
-
-	suite.Equal(config.RecordNotFoundErrorResponse.Code, suite.rec.Code)
-	suite.Contains(suite.rec.Body.String(), config.RecordNotFoundErrorResponse.Json["content"])
-}
-
-func (suite *ListControllerTestSuite) TestBadDestroyWithForbiddenError() {
-	suite.listServiceMock.EXPECT().Destroy(suite.ctx).Return(config.ForbiddenError)
-	suite.con.Destroy(suite.ctx)
-
-	suite.Equal(config.ForbiddenErrorResponse.Code, suite.rec.Code)
-	suite.Contains(suite.rec.Body.String(), config.ForbiddenErrorResponse.Json["content"])
-}
-
 func (suite *ListControllerTestSuite) TestBadDestroyWithOtherError() {
 	suite.listServiceMock.EXPECT().Destroy(suite.ctx).Return(errors.New("error"))
 	suite.con.Destroy(suite.ctx)
@@ -157,22 +124,6 @@ func (suite *ListControllerTestSuite) TestSuccessMove() {
 	suite.con.Move(suite.ctx)
 
 	suite.Equal(200, suite.rec.Code)
-}
-
-func (suite *ListControllerTestSuite) TestBadMoveWithListNotFound() {
-	suite.listServiceMock.EXPECT().Move(suite.ctx).Return(gorm.ErrRecordNotFound)
-	suite.con.Move(suite.ctx)
-
-	suite.Equal(config.RecordNotFoundErrorResponse.Code, suite.rec.Code)
-	suite.Contains(suite.rec.Body.String(), config.RecordNotFoundErrorResponse.Json["content"])
-}
-
-func (suite *ListControllerTestSuite) TestBadMoveForbiddenError() {
-	suite.listServiceMock.EXPECT().Move(suite.ctx).Return(config.ForbiddenError)
-	suite.con.Move(suite.ctx)
-
-	suite.Equal(config.ForbiddenErrorResponse.Code, suite.rec.Code)
-	suite.Contains(suite.rec.Body.String(), config.ForbiddenErrorResponse.Json["content"])
 }
 
 func (suite *ListControllerTestSuite) TestBadMoveOtherError() {

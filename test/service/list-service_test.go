@@ -17,7 +17,6 @@ import (
 	"github.com/kuritaeiji/todo-gin-back/service"
 	"github.com/kuritaeiji/todo-gin-back/validators"
 	"github.com/stretchr/testify/suite"
-	"gorm.io/gorm"
 )
 
 type ListServiceTestSuite struct {
@@ -103,14 +102,12 @@ func (suite *ListServiceTestSuite) TestBadCreateWithDBError() {
 func (suite *ListServiceTestSuite) TestSuccessUpdate() {
 	user := factory.NewUser(&factory.UserConfig{})
 	list := factory.NewList(&factory.ListConfig{})
-	list.UserID = user.ID
 	updatingListConfig := &factory.ListConfig{Title: "test title"}
 	body := factory.CreateListRequestBody(updatingListConfig)
 	req := httptest.NewRequest("PUT", fmt.Sprintf("/api/lists/%v", list.ID), body)
 	suite.ctx.Request = req
 	suite.ctx.Set(config.CurrentUserKey, user)
-	suite.ctx.Params = gin.Params{gin.Param{Key: "id", Value: strconv.Itoa(list.ID)}}
-	suite.listRepositoryMock.EXPECT().Find(list.ID).Return(list, nil)
+	suite.ctx.Set(config.ListKey, list)
 	suite.listRepositoryMock.EXPECT().Update(&list, gomock.Any()).Do(func(l *model.List, updatingList model.List) {
 		suite.Equal(updatingListConfig.Title, updatingList.Title)
 	})
@@ -120,40 +117,11 @@ func (suite *ListServiceTestSuite) TestSuccessUpdate() {
 	suite.Equal(list.ID, rList.ID)
 }
 
-func (suite *ListServiceTestSuite) TestBadUpdateWithIDToIntError() {
-	_, err := suite.service.Update(suite.ctx)
-
-	suite.Error(err)
-	suite.IsType(&strconv.NumError{}, err)
-}
-
-func (suite *ListServiceTestSuite) TestBadUpdateWithCannotFindList() {
-	suite.ctx.Params = gin.Params{gin.Param{Key: "id", Value: "1"}}
-	err := gorm.ErrRecordNotFound
-	suite.listRepositoryMock.EXPECT().Find(1).Return(model.List{}, err)
-	_, rerr := suite.service.Update(suite.ctx)
-
-	suite.Equal(err, rerr)
-}
-
-func (suite *ListServiceTestSuite) TestBadUpdateWithCurrentUserIsForbidden() {
-	user := factory.NewUser(&factory.UserConfig{})
-	list := factory.NewList(&factory.ListConfig{})
-	list.UserID = user.ID + 1
-	suite.ctx.Params = gin.Params{gin.Param{Key: "id", Value: strconv.Itoa(list.ID)}}
-	suite.listRepositoryMock.EXPECT().Find(list.ID).Return(list, nil)
-	suite.ctx.Set(config.CurrentUserKey, user)
-	_, err := suite.service.Update(suite.ctx)
-
-	suite.Equal(config.ForbiddenError, err)
-}
-
 func (suite *ListServiceTestSuite) TestBadUpdateWithValidationError() {
 	var user model.User
 	var list model.List
-	suite.ctx.Params = gin.Params{gin.Param{Key: "id", Value: strconv.Itoa(list.ID)}}
-	suite.listRepositoryMock.EXPECT().Find(list.ID).Return(list, nil)
 	suite.ctx.Set(config.CurrentUserKey, user)
+	suite.ctx.Set(config.ListKey, list)
 	req := httptest.NewRequest("PUT", "/api/lists/:id", factory.CreateListRequestBody(&factory.ListConfig{NotUseDefaultValue: true}))
 	suite.ctx.Request = req
 	_, err := suite.service.Update(suite.ctx)
@@ -164,8 +132,7 @@ func (suite *ListServiceTestSuite) TestBadUpdateWithValidationError() {
 func (suite *ListServiceTestSuite) TestBadUpdateWithDBError() {
 	var user model.User
 	var list model.List
-	suite.ctx.Params = gin.Params{gin.Param{Key: "id", Value: strconv.Itoa(list.ID)}}
-	suite.listRepositoryMock.EXPECT().Find(list.ID).Return(list, nil)
+	suite.ctx.Set(config.ListKey, list)
 	suite.ctx.Set(config.CurrentUserKey, user)
 	req := httptest.NewRequest("PUT", "/api/lists/:id", factory.CreateListRequestBody(&factory.ListConfig{}))
 	suite.ctx.Request = req
@@ -180,7 +147,7 @@ func (suite *ListServiceTestSuite) TestSuccessDestroy() {
 	id := 1
 	suite.ctx.Params = gin.Params{gin.Param{Key: "id", Value: strconv.Itoa(id)}}
 	list := factory.NewList(&factory.ListConfig{})
-	suite.listRepositoryMock.EXPECT().Find(id).Return(list, nil)
+	suite.ctx.Set(config.ListKey, list)
 	currentUser := factory.NewUser(&factory.UserConfig{})
 	suite.ctx.Set(config.CurrentUserKey, currentUser)
 	list.UserID = currentUser.ID
@@ -190,42 +157,10 @@ func (suite *ListServiceTestSuite) TestSuccessDestroy() {
 	suite.Nil(err)
 }
 
-func (suite *ListServiceTestSuite) TestBadDestroyWithIDToIntError() {
-	suite.ctx.Params = gin.Params{gin.Param{Key: "id", Value: ""}}
-	err := suite.service.Destroy(suite.ctx)
-
-	suite.IsType(&strconv.NumError{}, err)
-}
-
-func (suite *ListServiceTestSuite) TestBadDestroyWithRecordNotFoundError() {
-	id := 1
-	suite.ctx.Params = gin.Params{gin.Param{Key: "id", Value: strconv.Itoa(id)}}
-	suite.listRepositoryMock.EXPECT().Find(id).Return(model.List{}, gorm.ErrRecordNotFound)
-	err := suite.service.Destroy(suite.ctx)
-
-	suite.Equal(gorm.ErrRecordNotFound, err)
-}
-
-func (suite *ListServiceTestSuite) TestBadDestroyWithForbiddenError() {
-	id := 1
-	suite.ctx.Params = gin.Params{gin.Param{Key: "id", Value: strconv.Itoa(id)}}
-	currentUser := factory.NewUser(&factory.UserConfig{})
-	list := factory.NewList(&factory.ListConfig{})
-	list.UserID = currentUser.ID + 1
-	suite.listRepositoryMock.EXPECT().Find(id).Return(list, nil)
-	suite.ctx.Set(config.CurrentUserKey, currentUser)
-	err := suite.service.Destroy(suite.ctx)
-
-	suite.Equal(config.ForbiddenError, err)
-}
-
 func (suite *ListServiceTestSuite) TestBadDestroyWithDBError() {
-	id := 1
-	suite.ctx.Params = gin.Params{gin.Param{Key: "id", Value: strconv.Itoa(id)}}
 	currentUser := factory.NewUser(&factory.UserConfig{})
 	list := factory.NewList(&factory.ListConfig{})
-	list.UserID = currentUser.ID
-	suite.listRepositoryMock.EXPECT().Find(id).Return(list, nil)
+	suite.ctx.Set(config.ListKey, list)
 	suite.ctx.Set(config.CurrentUserKey, currentUser)
 	err := errors.New("db error")
 	suite.listRepositoryMock.EXPECT().Destroy(&list).Return(err)
@@ -235,13 +170,10 @@ func (suite *ListServiceTestSuite) TestBadDestroyWithDBError() {
 }
 
 func (suite *ListServiceTestSuite) TestSuccessMove() {
-	listID := 1
 	list := factory.NewList(&factory.ListConfig{})
-	suite.ctx.Params = gin.Params{gin.Param{Key: "id", Value: strconv.Itoa(listID)}}
-	suite.listRepositoryMock.EXPECT().Find(listID).Return(list, nil)
 	user := factory.NewUser(&factory.UserConfig{})
 	suite.ctx.Set(config.CurrentUserKey, user)
-	list.UserID = user.ID
+	suite.ctx.Set(config.ListKey, list)
 	toIndex := 1
 	req := httptest.NewRequest("PUT", "/api/lists/1/move", factory.CreateListRequestBody(&factory.ListConfig{Index: toIndex}))
 	suite.ctx.Request = req
@@ -251,41 +183,11 @@ func (suite *ListServiceTestSuite) TestSuccessMove() {
 	suite.Nil(err)
 }
 
-func (suite *ListServiceTestSuite) TestBadMoveWithIDToIntError() {
-	suite.ctx.Params = gin.Params{gin.Param{Key: "id", Value: "invalid id"}}
-	err := suite.service.Move(suite.ctx)
-	suite.IsType(&strconv.NumError{}, err)
-}
-
-func (suite *ListServiceTestSuite) TestBadMoveWithRecordNotFoundError() {
-	listID := 1
-	suite.ctx.Params = gin.Params{gin.Param{Key: "id", Value: strconv.Itoa(listID)}}
-	suite.listRepositoryMock.EXPECT().Find(listID).Return(model.List{}, gorm.ErrRecordNotFound)
-	err := suite.service.Move(suite.ctx)
-	suite.Equal(gorm.ErrRecordNotFound, err)
-}
-
-func (suite *ListServiceTestSuite) TestBadMoveWithForbiddenError() {
-	listID := 1
-	suite.ctx.Params = gin.Params{gin.Param{Key: "id", Value: strconv.Itoa(listID)}}
-	list := factory.NewList(&factory.ListConfig{})
-	suite.listRepositoryMock.EXPECT().Find(listID).Return(list, nil)
-	currentUser := factory.NewUser(&factory.UserConfig{})
-	currentUser.ID = list.UserID + 1
-	suite.ctx.Set(config.CurrentUserKey, currentUser)
-	err := suite.service.Move(suite.ctx)
-
-	suite.Equal(config.ForbiddenError, err)
-}
-
 func (suite *ListServiceTestSuite) TestBadMoveWithValidationError() {
-	listID := 1
-	suite.ctx.Params = gin.Params{gin.Param{Key: "id", Value: strconv.Itoa(listID)}}
 	list := factory.NewList(&factory.ListConfig{})
-	suite.listRepositoryMock.EXPECT().Find(listID).Return(list, nil)
 	currentUser := factory.NewUser(&factory.UserConfig{})
 	suite.ctx.Set(config.CurrentUserKey, currentUser)
-	currentUser.ID = list.UserID
+	suite.ctx.Set(config.ListKey, list)
 	req := httptest.NewRequest("PUT", "/api/lists/1/move", factory.CreateListRequestBody(&factory.ListConfig{Index: -1}))
 	suite.ctx.Request = req
 	err := suite.service.Move(suite.ctx)
@@ -294,13 +196,10 @@ func (suite *ListServiceTestSuite) TestBadMoveWithValidationError() {
 }
 
 func (suite *ListServiceTestSuite) TestBadMoveWithDBError() {
-	listID := 1
-	suite.ctx.Params = gin.Params{gin.Param{Key: "id", Value: strconv.Itoa(listID)}}
 	list := factory.NewList(&factory.ListConfig{})
-	suite.listRepositoryMock.EXPECT().Find(listID).Return(list, nil)
 	currentUser := factory.NewUser(&factory.UserConfig{})
+	suite.ctx.Set(config.ListKey, list)
 	suite.ctx.Set(config.CurrentUserKey, currentUser)
-	currentUser.ID = list.UserID
 	toIndex := 1
 	req := httptest.NewRequest("PUT", "/api/lists/1/move", factory.CreateListRequestBody(&factory.ListConfig{Index: toIndex}))
 	suite.ctx.Request = req
