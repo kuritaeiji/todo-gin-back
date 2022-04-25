@@ -121,3 +121,24 @@ func (suite *UserRepositoryTestSuite) TestBadDestroyWithDBError() {
 
 	suite.Error(err)
 }
+
+func (suite *UserRepositoryTestSuite) TestTrueHasCard() {
+	user := factory.CreateUser(&factory.UserConfig{})
+	list := factory.CreateList(&factory.ListConfig{}, user)
+	card := factory.CreateCard(&factory.CardConfig{}, list)
+	hasCard, err := suite.userRepository.HasCard(card, user)
+
+	suite.True(hasCard)
+	suite.Nil(err)
+}
+
+func (suite *UserRepositoryTestSuite) TestFalseHasCard() {
+	user := factory.CreateUser(&factory.UserConfig{})
+	otherUser := factory.CreateUser(&factory.UserConfig{})
+	list := factory.CreateList(&factory.ListConfig{}, otherUser)
+	card := factory.CreateCard(&factory.CardConfig{}, list)
+	hasCard, err := suite.userRepository.HasCard(card, user)
+
+	suite.False(hasCard)
+	suite.Nil(err)
+}

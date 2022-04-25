@@ -17,6 +17,7 @@ type UserRepository interface {
 	IsUnique(email string) (bool, error)
 	Find(id int) (model.User, error)
 	FindByEmail(email string) (model.User, error)
+	HasCard(card model.Card, user model.User) (bool, error)
 }
 
 type userRepository struct {
@@ -72,4 +73,13 @@ func (r *userRepository) FindByEmail(email string) (model.User, error) {
 	}
 
 	return user, nil
+}
+
+func (r *userRepository) HasCard(card model.Card, user model.User) (bool, error) {
+	err := r.db.Joins("List").First(&card).Error
+	if err != nil {
+		return false, err
+	}
+
+	return card.List.UserID == user.ID, nil
 }
