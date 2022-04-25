@@ -48,6 +48,18 @@ func (suite *CardRepositoryTestSuite) TestSuccessCreate() {
 	suite.Equal(list.ID, rCard.ListID)
 }
 
+func (suite *CardRepositoryTestSuite) TestSuccessUpdate() {
+	user := factory.CreateUser(&factory.UserConfig{})
+	list := factory.CreateList(&factory.ListConfig{}, user)
+	card := factory.CreateCard(&factory.CardConfig{}, list)
+	updatingCard := factory.NewCard(&factory.CardConfig{Title: "updated title"})
+	err := suite.repository.Update(&card, &updatingCard)
+
+	suite.Nil(err)
+	rCard, _ := suite.repository.Find(card.ID)
+	suite.Equal(updatingCard.Title, rCard.Title)
+}
+
 func (suite *CardRepositoryTestSuite) TestSuccessFind() {
 	user := factory.CreateUser(&factory.UserConfig{})
 	list := factory.CreateList(&factory.ListConfig{}, user)

@@ -67,3 +67,31 @@ func (suite *CardControllerTestSuite) TestBadCreateWithOtherError() {
 
 	suite.Equal(500, suite.rec.Code)
 }
+
+func (suite *CardControllerTestSuite) TestSuccessUpdate() {
+	card := factory.NewCard(&factory.CardConfig{})
+	suite.cardServiceMock.EXPECT().Update(suite.ctx).Return(card, nil)
+	suite.controller.Update(suite.ctx)
+
+	suite.Equal(200, suite.rec.Code)
+	var rCard model.Card
+	json.Unmarshal(suite.rec.Body.Bytes(), &rCard)
+	suite.Equal(card.Title, rCard.Title)
+	suite.Equal(card.ID, rCard.ID)
+	suite.Equal(card.ListID, rCard.ListID)
+}
+
+func (suite *CardControllerTestSuite) TestBadUpdateWithValidationError() {
+	suite.cardServiceMock.EXPECT().Update(suite.ctx).Return(model.Card{}, validator.ValidationErrors{})
+	suite.controller.Update(suite.ctx)
+
+	suite.Equal(config.ValidationErrorResponse.Code, suite.rec.Code)
+	suite.Contains(suite.rec.Body.String(), config.ValidationErrorResponse.Json["content"])
+}
+
+func (suite *CardControllerTestSuite) TestBadUpdateWithOtherError() {
+	suite.cardServiceMock.EXPECT().Update(suite.ctx).Return(model.Card{}, errors.New("other error"))
+	suite.controller.Update(suite.ctx)
+
+	suite.Equal(500, suite.rec.Code)
+}

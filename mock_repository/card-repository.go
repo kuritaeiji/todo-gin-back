@@ -62,3 +62,17 @@ func (mr *MockCardRepositoryMockRecorder) Find(id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Find", reflect.TypeOf((*MockCardRepository)(nil).Find), id)
 }
+
+// Update mocks base method.
+func (m *MockCardRepository) Update(card, updatingCard *model.Card) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Update", card, updatingCard)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Update indicates an expected call of Update.
+func (mr *MockCardRepositoryMockRecorder) Update(card, updatingCard interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockCardRepository)(nil).Update), card, updatingCard)
+}

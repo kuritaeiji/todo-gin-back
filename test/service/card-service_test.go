@@ -73,3 +73,38 @@ func (suite *CardServiceTestSuite) TestBadCreateWithDBError() {
 
 	suite.Equal(err, rerr)
 }
+
+func (suite *CardServiceTestSuite) TestSuccessUpdate() {
+	updatingCardConfig := &factory.CardConfig{Title: "updated title"}
+	req := httptest.NewRequest("PUT", "/api/cards/1", factory.CreateCardRequestBody(updatingCardConfig))
+	suite.ctx.Request = req
+	card := factory.NewCard(&factory.CardConfig{})
+	suite.ctx.Set(config.CardKey, card)
+	suite.cardRepositoryMock.EXPECT().Update(&card, gomock.Any()).Return(nil).Do(func(card *model.Card, updatingCard *model.Card) {
+		suite.Equal(updatingCardConfig.Title, updatingCard.Title)
+	})
+	rCard, err := suite.service.Update(suite.ctx)
+
+	suite.Equal(card, rCard)
+	suite.Nil(err)
+}
+
+func (suite *CardServiceTestSuite) TestBadUpdateWithValidationError() {
+	req := httptest.NewRequest("PUT", "/api/cards/1", factory.CreateCardRequestBody(&factory.CardConfig{NotUseDefaultValue: true}))
+	suite.ctx.Request = req
+	_, err := suite.service.Update(suite.ctx)
+
+	suite.IsType(validator.ValidationErrors{}, err)
+}
+
+func (suite *CardServiceTestSuite) TestBadUpdateWithDBError() {
+	req := httptest.NewRequest("PUT", "/api/cards/1", factory.CreateCardRequestBody(&factory.CardConfig{}))
+	suite.ctx.Request = req
+	card := factory.NewCard(&factory.CardConfig{})
+	suite.ctx.Set(config.CardKey, card)
+	err := errors.New("db error")
+	suite.cardRepositoryMock.EXPECT().Update(&card, gomock.Any()).Return(err)
+	_, rerr := suite.service.Update(suite.ctx)
+
+	suite.Equal(err, rerr)
+}

@@ -13,6 +13,7 @@ type cardController struct {
 
 type CardController interface {
 	Create(*gin.Context) // POST /api/lists/:listID/cards
+	Update(*gin.Context) // PUT /api/cards/:id
 }
 
 func NewCardController() CardController {
@@ -21,6 +22,22 @@ func NewCardController() CardController {
 
 func (c *cardController) Create(ctx *gin.Context) {
 	card, err := c.service.Create(ctx)
+
+	if _, ok := err.(validator.ValidationErrors); ok {
+		ctx.AbortWithStatusJSON(config.ValidationErrorResponse.Code, config.ValidationErrorResponse.Json)
+		return
+	}
+
+	if err != nil {
+		ctx.AbortWithStatus(500)
+		return
+	}
+
+	ctx.JSON(200, card.ToJson())
+}
+
+func (c *cardController) Update(ctx *gin.Context) {
+	card, err := c.service.Update(ctx)
 
 	if _, ok := err.(validator.ValidationErrors); ok {
 		ctx.AbortWithStatusJSON(config.ValidationErrorResponse.Code, config.ValidationErrorResponse.Json)

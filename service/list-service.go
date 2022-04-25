@@ -51,21 +51,6 @@ func (s *listService) Create(ctx *gin.Context) (model.List, error) {
 }
 
 func (s *listService) Update(ctx *gin.Context) (model.List, error) {
-	// id, err := strconv.Atoi(ctx.Param("id"))
-	// if err != nil {
-	// 	return model.List{}, err
-	// }
-
-	// list, err := s.rep.Find(id)
-	// if err != nil {
-	// 	return list, err
-	// }
-
-	// currentUser := ctx.MustGet(config.CurrentUserKey).(model.User)
-	// if !currentUser.HasList(list) {
-	// 	return list, config.ForbiddenError
-	// }
-
 	var dtoList dto.List
 	err := ctx.ShouldBindJSON(&dtoList)
 	if err != nil {
@@ -85,41 +70,11 @@ func (s *listService) Update(ctx *gin.Context) (model.List, error) {
 }
 
 func (s *listService) Destroy(ctx *gin.Context) error {
-	// id, err := strconv.Atoi(ctx.Param("id"))
-	// if err != nil {
-	// 	return err
-	// }
-
-	// list, err := s.rep.Find(id)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// currentUser := ctx.MustGet(config.CurrentUserKey).(model.User)
-	// if !currentUser.HasList(list) {
-	// 	return config.ForbiddenError
-	// }
-
 	list := ctx.MustGet(config.ListKey).(model.List)
 	return s.rep.Destroy(&list)
 }
 
 func (s *listService) Move(ctx *gin.Context) error {
-	// id, err := strconv.Atoi(ctx.Param("id"))
-	// if err != nil {
-	// 	return err
-	// }
-
-	// list, err := s.rep.Find(id)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// currentUser := ctx.MustGet(config.CurrentUserKey).(model.User)
-	// if !currentUser.HasList(list) {
-	// 	return config.ForbiddenError
-	// }
-
 	var moveList dto.MoveList
 	err := ctx.ShouldBindJSON(&moveList)
 	if err != nil {

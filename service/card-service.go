@@ -16,6 +16,7 @@ type cardService struct {
 
 type CardService interface {
 	Create(*gin.Context) (model.Card, error)
+	Update(*gin.Context) (model.Card, error)
 }
 
 func NewCardService() CardService {
@@ -34,6 +35,21 @@ func (s *cardService) Create(ctx *gin.Context) (model.Card, error) {
 
 	list := ctx.MustGet(config.ListKey).(model.List)
 	err = s.repository.Create(&card, &list)
+	return card, err
+}
+
+func (s *cardService) Update(ctx *gin.Context) (model.Card, error) {
+	var dtoCard dto.Card
+	err := ctx.ShouldBindJSON(&dtoCard)
+	if err != nil {
+		return model.Card{}, err
+	}
+
+	var updatingCard model.Card
+	dtoCard.Transfer(&updatingCard)
+	card := ctx.MustGet(config.CardKey).(model.Card)
+	err = s.repository.Update(&card, &updatingCard)
+
 	return card, err
 }
 

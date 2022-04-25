@@ -104,3 +104,56 @@ func (suite *ListRequestTestSuite) TestBadCardCreateWithValidationError() {
 	suite.Equal(config.ValidationErrorResponse.Code, suite.rec.Code)
 	suite.Contains(suite.rec.Body.String(), config.ValidationErrorResponse.Json["content"])
 }
+
+func (suite *ListRequestTestSuite) TestSuccessUpdateCard() {
+	user := factory.CreateUser(&factory.UserConfig{})
+	list := factory.CreateList(&factory.ListConfig{}, user)
+	card := factory.CreateCard(&factory.CardConfig{}, list)
+	updatingCardConfig := &factory.CardConfig{Title: "updated title"}
+	req := httptest.NewRequest("PUT", fmt.Sprintf("/api/cards/%v", card.ID), factory.CreateCardRequestBody(updatingCardConfig))
+	req.Header.Add(config.TokenHeader, factory.CreateAccessToken(user))
+	suite.router.ServeHTTP(suite.rec, req)
+
+	suite.Equal(200, suite.rec.Code)
+	var rCard model.Card
+	json.Unmarshal(suite.rec.Body.Bytes(), &rCard)
+	suite.Equal(card.ID, rCard.ID)
+	suite.Equal(updatingCardConfig.Title, rCard.Title)
+	dbCard, _ := suite.repository.Find(card.ID)
+	suite.Equal(updatingCardConfig.Title, dbCard.Title)
+}
+
+func (suite *ListRequestTestSuite) TestBadUpdateCardWithNotFoundCard() {
+	user := factory.CreateUser(&factory.UserConfig{})
+	req := httptest.NewRequest("PUT", "/api/cards/1", nil)
+	req.Header.Add(config.TokenHeader, factory.CreateAccessToken(user))
+	suite.router.ServeHTTP(suite.rec, req)
+
+	suite.Equal(config.RecordNotFoundErrorResponse.Code, suite.rec.Code)
+	suite.Contains(suite.rec.Body.String(), config.RecordNotFoundErrorResponse.Json["content"])
+}
+
+func (suite *ListRequestTestSuite) TestBadUpdateCardWithForbiddenCardError() {
+	user := factory.CreateUser(&factory.UserConfig{})
+	otherUser := factory.CreateUser(&factory.UserConfig{})
+	list := factory.CreateList(&factory.ListConfig{}, otherUser)
+	card := factory.CreateCard(&factory.CardConfig{}, list)
+	req := httptest.NewRequest("PUT", fmt.Sprintf("/api/cards/%v", card.ID), nil)
+	req.Header.Add(config.TokenHeader, factory.CreateAccessToken(user))
+	suite.router.ServeHTTP(suite.rec, req)
+
+	suite.Equal(config.ForbiddenErrorResponse.Code, suite.rec.Code)
+	suite.Contains(suite.rec.Body.String(), config.ForbiddenErrorResponse.Json["content"])
+}
+
+func (suite *ListRequestTestSuite) TestBadUpdateCardWithValidationError() {
+	user := factory.CreateUser(&factory.UserConfig{})
+	list := factory.CreateList(&factory.ListConfig{}, user)
+	card := factory.CreateCard(&factory.CardConfig{}, list)
+	req := httptest.NewRequest("PUT", fmt.Sprintf("/api/cards/%v", card.ID), factory.CreateCardRequestBody(&factory.CardConfig{NotUseDefaultValue: true}))
+	req.Header.Add(config.TokenHeader, factory.CreateAccessToken(user))
+	suite.router.ServeHTTP(suite.rec, req)
+
+	suite.Equal(config.ValidationErrorResponse.Code, suite.rec.Code)
+	suite.Contains(suite.rec.Body.String(), config.ValidationErrorResponse.Json["content"])
+}

@@ -58,6 +58,12 @@ func RouterSetup(userController controller.UserController) *gin.Engine {
 			auth.Use(listMiddleware.Authorize)
 			auth.POST("/lists/:listID/cards", cardCon.Create)
 		}
+		card := auth.Group("/cards")
+		{
+			cardMiddleware := middleware.NewCardMiddleware()
+			card.Use(cardMiddleware.Authorize)
+			card.PUT("/:id", cardCon.Update)
+		}
 	}
 
 	return r
