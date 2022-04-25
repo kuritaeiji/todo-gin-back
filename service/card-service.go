@@ -18,6 +18,7 @@ type CardService interface {
 	Create(*gin.Context) (model.Card, error)
 	Update(*gin.Context) (model.Card, error)
 	Destroy(*gin.Context) error
+	Move(*gin.Context) error
 }
 
 func NewCardService() CardService {
@@ -57,6 +58,19 @@ func (s *cardService) Update(ctx *gin.Context) (model.Card, error) {
 func (s *cardService) Destroy(ctx *gin.Context) error {
 	card := ctx.MustGet(config.CardKey).(model.Card)
 	return s.repository.Destroy(&card)
+}
+
+func (s *cardService) Move(ctx *gin.Context) error {
+	var dtoMoveCard dto.MoveCard
+	err := ctx.ShouldBindJSON(&dtoMoveCard)
+
+	if err != nil {
+		return err
+	}
+
+	card := ctx.MustGet(config.CardKey).(model.Card)
+	currentUser := ctx.MustGet(config.CurrentUserKey).(model.User)
+	return s.repository.Move(&card, dtoMoveCard.ToListID, dtoMoveCard.ToIndex, &currentUser)
 }
 
 // test

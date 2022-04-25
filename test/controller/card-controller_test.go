@@ -110,3 +110,17 @@ func (suite *CardControllerTestSuite) TestBadDestroyCardWithError() {
 
 	suite.Equal(500, suite.rec.Code)
 }
+
+func (suite *CardControllerTestSuite) TestSuccessMoveCard() {
+	suite.cardServiceMock.EXPECT().Move(suite.ctx).Return(nil)
+	suite.controller.Move(suite.ctx)
+
+	suite.Equal(200, suite.rec.Code)
+}
+
+func (suite *CardControllerTestSuite) TestBadMoveCard() {
+	suite.cardServiceMock.EXPECT().Move(suite.ctx).Return(errors.New("db error"))
+	suite.controller.Move(suite.ctx)
+
+	suite.Equal(500, suite.rec.Code)
+}

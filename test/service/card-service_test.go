@@ -9,6 +9,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/golang/mock/gomock"
 	"github.com/kuritaeiji/todo-gin-back/config"
+	"github.com/kuritaeiji/todo-gin-back/dto"
 	"github.com/kuritaeiji/todo-gin-back/factory"
 	"github.com/kuritaeiji/todo-gin-back/mock_repository"
 	"github.com/kuritaeiji/todo-gin-back/model"
@@ -124,6 +125,44 @@ func (suite *CardServiceTestSuite) TestBadDestroyCardWithDBError() {
 	err := errors.New("db error")
 	suite.cardRepositoryMock.EXPECT().Destroy(&card).Return(err)
 	rerr := suite.service.Destroy(suite.ctx)
+
+	suite.Equal(err, rerr)
+}
+
+func (suite *CardServiceTestSuite) TestSuccessMoveCard() {
+	var dtoMoveCard dto.MoveCard
+	req := httptest.NewRequest("PUT", "/api/cards/1/move", factory.CreateMoveCardRequestBody(&dtoMoveCard))
+	suite.ctx.Request = req
+	var currentUser model.User
+	suite.ctx.Set(config.CurrentUserKey, currentUser)
+	var card model.Card
+	suite.ctx.Set(config.CardKey, card)
+	suite.cardRepositoryMock.EXPECT().Move(&card, dtoMoveCard.ToListID, dtoMoveCard.ToIndex, &currentUser).Return(nil)
+	err := suite.service.Move(suite.ctx)
+
+	suite.Nil(err)
+}
+
+func (suite *CardServiceTestSuite) TestBadMoveCardWithValidationError() {
+	dtoMoveCard := dto.MoveCard{ToIndex: -1}
+	req := httptest.NewRequest("PUT", "/api/cards/1/move", factory.CreateMoveCardRequestBody(&dtoMoveCard))
+	suite.ctx.Request = req
+	err := suite.service.Move(suite.ctx)
+
+	suite.IsType(validator.ValidationErrors{}, err)
+}
+
+func (suite *CardServiceTestSuite) TestBadMoveCardWithDBError() {
+	var dtoMoveCard dto.MoveCard
+	req := httptest.NewRequest("PUT", "/api/cards/1/move", factory.CreateMoveCardRequestBody(&dtoMoveCard))
+	suite.ctx.Request = req
+	var currentUser model.User
+	suite.ctx.Set(config.CurrentUserKey, currentUser)
+	var card model.Card
+	suite.ctx.Set(config.CardKey, card)
+	err := errors.New("db error")
+	suite.cardRepositoryMock.EXPECT().Move(&card, dtoMoveCard.ToListID, dtoMoveCard.ToIndex, &currentUser).Return(err)
+	rerr := suite.service.Move(suite.ctx)
 
 	suite.Equal(err, rerr)
 }

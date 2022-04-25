@@ -59,3 +59,8 @@ func CreateCardRequestBody(cardConfig *CardConfig) io.Reader {
 	json, _ := json.Marshal(body)
 	return strings.NewReader(string(json))
 }
+
+func CreateMoveCardRequestBody(dtoMoveCard *dto.MoveCard) io.Reader {
+	json, _ := json.Marshal(dtoMoveCard)
+	return strings.NewReader(string(json))
+}

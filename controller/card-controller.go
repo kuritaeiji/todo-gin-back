@@ -15,6 +15,7 @@ type CardController interface {
 	Create(*gin.Context)  // POST /api/lists/:listID/cards
 	Update(*gin.Context)  // PUT /api/cards/:id
 	Destroy(*gin.Context) // DELETE /api/cards/:id
+	Move(*gin.Context)    // PUT /api/cards/:id/move
 }
 
 func NewCardController() CardController {
@@ -55,6 +56,17 @@ func (c *cardController) Update(ctx *gin.Context) {
 
 func (c *cardController) Destroy(ctx *gin.Context) {
 	err := c.service.Destroy(ctx)
+
+	if err != nil {
+		ctx.AbortWithStatus(500)
+		return
+	}
+
+	ctx.Status(200)
+}
+
+func (c *cardController) Move(ctx *gin.Context) {
+	err := c.service.Move(ctx)
 
 	if err != nil {
 		ctx.AbortWithStatus(500)

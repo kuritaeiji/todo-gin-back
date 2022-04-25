@@ -21,7 +21,7 @@ type CardMiddlewareService interface {
 }
 
 func NewCardMiddlewareService() CardMiddlewareService {
-	return &cardMiddlewareService{repository: repository.NewCardRepository()}
+	return &cardMiddlewareService{repository: repository.NewCardRepository(), userRepository: repository.NewUserRepository()}
 }
 
 func (s *cardMiddlewareService) Authorize(ctx *gin.Context) (model.Card, error) {
