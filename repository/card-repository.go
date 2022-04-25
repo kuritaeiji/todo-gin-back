@@ -3,25 +3,33 @@ package repository
 // mockgen -source=repository/card-repository.go -destination=./mock_repository/card-repository.go
 
 import (
+	"github.com/kuritaeiji/todo-gin-back/config"
 	"github.com/kuritaeiji/todo-gin-back/db"
 	"github.com/kuritaeiji/todo-gin-back/model"
 	"gorm.io/gorm"
 )
 
 type cardRepository struct {
-	db *gorm.DB
+	db             *gorm.DB
+	listRepository ListRepository
 }
 
 type CardRepository interface {
 	Create(*model.Card, *model.List) error
 	Update(card *model.Card, updatingCard *model.Card) error
 	Destroy(card *model.Card) error
+	Move(card *model.Card, toListID int, toIndex int, currentUser *model.User) error
 	Find(id int) (model.Card, error)
 }
 
 func NewCardRepository() CardRepository {
-	return &cardRepository{db: db.GetDB()}
+	return &cardRepository{db: db.GetDB(), listRepository: NewListRepository()}
 }
+
+var (
+	plusIndexExpr  = map[string]interface{}{"index": gorm.Expr("cards.index + ?", 1)}
+	minusIndexExpr = map[string]interface{}{"index": gorm.Expr("cards.index - ?", 1)}
+)
 
 func (r *cardRepository) Create(card *model.Card, list *model.List) error {
 	return r.db.Model(list).Association("Cards").Append(card)
@@ -33,6 +41,65 @@ func (r *cardRepository) Update(card *model.Card, updatingCard *model.Card) erro
 
 func (r *cardRepository) Destroy(card *model.Card) error {
 	return r.db.Delete(&card).Error
+}
+
+func (r *cardRepository) Move(card *model.Card, toListID int, toIndex int, currentUser *model.User) error {
+	if card.ListID == toListID {
+		if toIndex > card.Index {
+			return r.moveWhenIncreaseIndex(card, toIndex)
+		}
+
+		return r.moveWhenDecreaseIndex(card, toIndex)
+	}
+
+	return r.moveWhenChangeList(card, toListID, toIndex, currentUser)
+}
+
+func (r *cardRepository) moveWhenIncreaseIndex(card *model.Card, toIndex int) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		err := tx.Model(model.Card{}).Where("cards.index > ? AND cards.index <= ? AND cards.list_id = ?", card.Index, toIndex, card.ListID).Updates(minusIndexExpr).Error
+		if err != nil {
+			return err
+		}
+
+		return tx.Model(card).Update("index", toIndex).Error
+	})
+}
+
+func (r *cardRepository) moveWhenDecreaseIndex(card *model.Card, toIndex int) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		err := tx.Model(model.Card{}).Where("cards.index < ? AND cards.index >= ? AND cards.list_id = ?", card.Index, toIndex, card.ListID).Updates(plusIndexExpr).Error
+		if err != nil {
+			return err
+		}
+
+		return tx.Model(card).Update("index", toIndex).Error
+	})
+}
+
+func (r *cardRepository) moveWhenChangeList(card *model.Card, toListID int, toIndex int, currentUser *model.User) error {
+	list, err := r.listRepository.Find(toListID)
+	if err != nil {
+		return err
+	}
+	if !currentUser.HasList(list) {
+		return config.ForbiddenError
+	}
+
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		err = tx.Model(model.Card{}).Where("cards.index > ? AND cards.list_id = ?", card.Index, card.ListID).Updates(minusIndexExpr).Error
+		if err != nil {
+			return err
+		}
+
+		err = tx.Model(model.Card{}).Where("cards.index >= ? AND cards.list_id = ?", toIndex, toListID).Updates(plusIndexExpr).Error
+		if err != nil {
+			return err
+		}
+
+		err = tx.Model(card).Select("Index", "ListID").Updates(model.Card{Index: toIndex, ListID: toListID}).Error
+		return err
+	})
 }
 
 func (r *cardRepository) Find(id int) (model.Card, error) {

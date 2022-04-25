@@ -20,7 +20,7 @@ type ListRepository interface {
 	DestroyLists(lists *[]model.List, tx *gorm.DB) error
 	Move(list *model.List, toIndex int, currentUser *model.User) error
 	Find(id int) (model.List, error)
-	FindLists(*model.User) error
+	FindListsWithCards(*model.User) error
 }
 
 func NewListRepository() ListRepository {
@@ -96,7 +96,9 @@ func (r *listRepository) Find(id int) (model.List, error) {
 	return list, err
 }
 
-func (r *listRepository) FindLists(user *model.User) error {
-	// user.listsにlistsをsetする
-	return r.db.Where(model.List{UserID: user.ID}).Order("lists.index ASC").Find(&user.Lists).Error
+func (r *listRepository) FindListsWithCards(user *model.User) error {
+	// user.listsにlistsをsetする(cardもpreloadした状態で)
+	return r.db.Where(model.List{UserID: user.ID}).Order("lists.index ASC").Preload("Cards", func(tx *gorm.DB) *gorm.DB {
+		return tx.Order("cards.index ASC")
+	}).Find(&user.Lists).Error
 }

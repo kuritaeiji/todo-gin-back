@@ -1,12 +1,14 @@
 package repository_test
 
 import (
+	"strconv"
 	"testing"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kuritaeiji/todo-gin-back/config"
 	"github.com/kuritaeiji/todo-gin-back/db"
 	"github.com/kuritaeiji/todo-gin-back/factory"
+	"github.com/kuritaeiji/todo-gin-back/model"
 	"github.com/kuritaeiji/todo-gin-back/repository"
 	"github.com/stretchr/testify/suite"
 	"gorm.io/gorm"
@@ -14,7 +16,8 @@ import (
 
 type CardRepositoryTestSuite struct {
 	suite.Suite
-	repository repository.CardRepository
+	repository     repository.CardRepository
+	listRepository repository.ListRepository
 }
 
 func (suite *CardRepositoryTestSuite) SetupSuite() {
@@ -22,6 +25,7 @@ func (suite *CardRepositoryTestSuite) SetupSuite() {
 	config.Init()
 	db.Init()
 	suite.repository = repository.NewCardRepository()
+	suite.listRepository = repository.NewListRepository()
 }
 
 func (suite *CardRepositoryTestSuite) TearDownSuite() {
@@ -59,6 +63,88 @@ func (suite *CardRepositoryTestSuite) TestSuccessUpdate() {
 	suite.Nil(err)
 	rCard, _ := suite.repository.Find(card.ID)
 	suite.Equal(updatingCard.Title, rCard.Title)
+}
+
+func (suite *CardRepositoryTestSuite) TestSuccessMoveWhenIncreaseIndex() {
+	user := factory.CreateUser(&factory.UserConfig{})
+	list := factory.CreateList(&factory.ListConfig{}, user)
+	cards := make([]model.Card, 0, 5)
+	for i := 0; i <= 4; i++ {
+		cards = append(cards, factory.CreateCard(&factory.CardConfig{Index: i, Title: strconv.Itoa(i)}, list))
+	}
+	err := suite.repository.Move(&cards[1], cards[1].ListID, 2, &user)
+
+	suite.Nil(err)
+	suite.listRepository.FindListsWithCards(&user)
+	dbCards := user.Lists[0].Cards
+	suite.Equal("0", dbCards[0].Title)
+	suite.Equal("2", dbCards[1].Title)
+	suite.Equal("1", dbCards[2].Title)
+	suite.Equal("3", dbCards[3].Title)
+	suite.Equal("4", dbCards[4].Title)
+}
+
+func (suite *CardRepositoryTestSuite) TestSuccessMoveWhenDecreaseIndex() {
+	user := factory.CreateUser(&factory.UserConfig{})
+	list := factory.CreateList(&factory.ListConfig{}, user)
+	cards := make([]model.Card, 0, 5)
+	for i := 0; i <= 4; i++ {
+		cards = append(cards, factory.CreateCard(&factory.CardConfig{Index: i, Title: strconv.Itoa(i)}, list))
+	}
+	err := suite.repository.Move(&cards[2], list.ID, 1, &user)
+
+	suite.Nil(err)
+	suite.listRepository.FindListsWithCards(&user)
+	dbCards := user.Lists[0].Cards
+	suite.Equal("0", dbCards[0].Title)
+	suite.Equal("2", dbCards[1].Title)
+	suite.Equal("1", dbCards[2].Title)
+	suite.Equal("3", dbCards[3].Title)
+	suite.Equal("4", dbCards[4].Title)
+}
+
+func (suite *CardRepositoryTestSuite) TestSuccessMoveWhenChangeList() {
+	user := factory.CreateUser(&factory.UserConfig{})
+	list := factory.CreateList(&factory.ListConfig{Index: 0}, user)
+	toList := factory.CreateList(&factory.ListConfig{Index: 1}, user)
+	cards := make([]model.Card, 0, 3)
+	toListCards := make([]model.Card, 0, 4)
+	for i := 0; i <= 2; i++ {
+		iString := strconv.Itoa(i)
+		cards = append(cards, factory.CreateCard(&factory.CardConfig{Index: i, Title: "card" + iString}, list))
+		toListCards = append(toListCards, factory.CreateCard(&factory.CardConfig{Index: i, Title: "toListCard" + iString}, toList))
+	}
+	err := suite.repository.Move(&cards[1], toList.ID, 2, &user)
+
+	suite.Nil(err)
+	suite.listRepository.FindListsWithCards(&user)
+	cards = user.Lists[0].Cards
+	toListCards = user.Lists[1].Cards
+	suite.Equal("card0", cards[0].Title)
+	suite.Equal("card2", cards[1].Title)
+	suite.Equal("toListCard0", toListCards[0].Title)
+	suite.Equal("toListCard1", toListCards[1].Title)
+	suite.Equal("card1", toListCards[2].Title)
+	suite.Equal("toListCard2", toListCards[3].Title)
+}
+
+func (suite *CardRepositoryTestSuite) TestBadMoveWithNotFoundToList() {
+	var user model.User
+	var card model.Card
+	err := suite.repository.Move(&card, 1, 1, &user)
+
+	suite.Equal(gorm.ErrRecordNotFound, err)
+}
+
+func (suite *CardRepositoryTestSuite) TestBadMoveWithForbiddenError() {
+	user := factory.CreateUser(&factory.UserConfig{})
+	list := factory.CreateList(&factory.ListConfig{}, user)
+	otherUser := factory.CreateUser(&factory.UserConfig{})
+	tolist := factory.CreateList(&factory.ListConfig{}, otherUser)
+	card := factory.CreateCard(&factory.CardConfig{}, list)
+	err := suite.repository.Move(&card, tolist.ID, 1, &user)
+
+	suite.Equal(config.ForbiddenError, err)
 }
 
 func (suite *CardRepositoryTestSuite) TestSuccessFind() {

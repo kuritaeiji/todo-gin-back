@@ -212,7 +212,7 @@ func (suite *ListRequestTestSuite) TestSuccessMoveWhenIncreaseIndex() {
 	suite.router.ServeHTTP(suite.rec, req)
 
 	suite.Equal(200, suite.rec.Code)
-	suite.repository.FindLists(&user)
+	suite.repository.FindListsWithCards(&user)
 	suite.Equal("0", user.Lists[0].Title)
 	suite.Equal("2", user.Lists[1].Title)
 	suite.Equal("3", user.Lists[2].Title)
@@ -236,7 +236,7 @@ func (suite *ListRequestTestSuite) TestSuccessMoveWhenDecreaseIndex() {
 	suite.router.ServeHTTP(suite.rec, req)
 
 	suite.Equal(200, suite.rec.Code)
-	suite.repository.FindLists(&user)
+	suite.repository.FindListsWithCards(&user)
 	suite.Equal("0", user.Lists[0].Title)
 	suite.Equal("3", user.Lists[1].Title)
 	suite.Equal("1", user.Lists[2].Title)

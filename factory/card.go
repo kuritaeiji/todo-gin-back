@@ -19,8 +19,6 @@ type CardConfig struct {
 
 const defaultCardTitle = "card title"
 
-var index = 0
-
 func (cardConfig *CardConfig) setDefaultValue() {
 	if cardConfig.NotUseDefaultValue {
 		return
@@ -28,11 +26,6 @@ func (cardConfig *CardConfig) setDefaultValue() {
 
 	if cardConfig.Title == "" {
 		cardConfig.Title = "card title"
-	}
-
-	if cardConfig.Index == 0 {
-		cardConfig.Index = index
-		index++
 	}
 }
 

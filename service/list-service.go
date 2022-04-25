@@ -28,7 +28,7 @@ func NewListService() ListService {
 
 func (s *listService) Index(ctx *gin.Context) ([]model.List, error) {
 	currentUser := ctx.MustGet(config.CurrentUserKey).(model.User)
-	err := s.rep.FindLists(&currentUser)
+	err := s.rep.FindListsWithCards(&currentUser)
 	return currentUser.Lists, err
 }
 

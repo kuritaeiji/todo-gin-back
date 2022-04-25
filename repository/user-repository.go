@@ -44,7 +44,7 @@ func (r *userRepository) Activate(user *model.User) error {
 }
 
 func (r *userRepository) Destroy(user *model.User) error {
-	err := r.listRepository.FindLists(user)
+	err := r.listRepository.FindListsWithCards(user)
 	if err != nil {
 		return err
 	}

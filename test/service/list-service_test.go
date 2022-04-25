@@ -44,7 +44,7 @@ func TestListServiceSuite(t *testing.T) {
 func (suite *ListServiceTestSuite) TestSuccessIndex() {
 	user := factory.NewUser(&factory.UserConfig{})
 	suite.ctx.Set(config.CurrentUserKey, user)
-	suite.listRepositoryMock.EXPECT().FindLists(&user).Return(nil)
+	suite.listRepositoryMock.EXPECT().FindListsWithCards(&user).Return(nil)
 
 	lists, err := suite.service.Index(suite.ctx)
 	suite.Nil(err)
@@ -55,7 +55,7 @@ func (suite *ListServiceTestSuite) TestBadIndexWithDBError() {
 	user := factory.NewUser(&factory.UserConfig{})
 	suite.ctx.Set(config.CurrentUserKey, user)
 	err := errors.New("db error")
-	suite.listRepositoryMock.EXPECT().FindLists(&user).Return(err)
+	suite.listRepositoryMock.EXPECT().FindListsWithCards(&user).Return(err)
 	lists, rerr := suite.service.Index(suite.ctx)
 
 	suite.Equal(err, rerr)
