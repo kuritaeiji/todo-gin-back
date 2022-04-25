@@ -12,8 +12,9 @@ type cardController struct {
 }
 
 type CardController interface {
-	Create(*gin.Context) // POST /api/lists/:listID/cards
-	Update(*gin.Context) // PUT /api/cards/:id
+	Create(*gin.Context)  // POST /api/lists/:listID/cards
+	Update(*gin.Context)  // PUT /api/cards/:id
+	Destroy(*gin.Context) // DELETE /api/cards/:id
 }
 
 func NewCardController() CardController {
@@ -50,6 +51,17 @@ func (c *cardController) Update(ctx *gin.Context) {
 	}
 
 	ctx.JSON(200, card.ToJson())
+}
+
+func (c *cardController) Destroy(ctx *gin.Context) {
+	err := c.service.Destroy(ctx)
+
+	if err != nil {
+		ctx.AbortWithStatus(500)
+		return
+	}
+
+	ctx.Status(200)
 }
 
 // test

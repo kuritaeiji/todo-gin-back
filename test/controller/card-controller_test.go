@@ -95,3 +95,18 @@ func (suite *CardControllerTestSuite) TestBadUpdateWithOtherError() {
 
 	suite.Equal(500, suite.rec.Code)
 }
+
+func (suite *CardControllerTestSuite) TestSuccessDestroyCard() {
+	suite.cardServiceMock.EXPECT().Destroy(suite.ctx).Return(nil)
+	suite.controller.Destroy(suite.ctx)
+
+	suite.Equal(200, suite.rec.Code)
+}
+
+func (suite *CardControllerTestSuite) TestBadDestroyCardWithError() {
+	err := errors.New("error")
+	suite.cardServiceMock.EXPECT().Destroy(suite.ctx).Return(err)
+	suite.controller.Destroy(suite.ctx)
+
+	suite.Equal(500, suite.rec.Code)
+}

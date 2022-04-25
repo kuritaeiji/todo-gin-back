@@ -15,7 +15,7 @@ type cardRepository struct {
 type CardRepository interface {
 	Create(*model.Card, *model.List) error
 	Update(card *model.Card, updatingCard *model.Card) error
-	// Destroy(card *model.Card) error
+	Destroy(card *model.Card) error
 	Find(id int) (model.Card, error)
 }
 
@@ -29,6 +29,10 @@ func (r *cardRepository) Create(card *model.Card, list *model.List) error {
 
 func (r *cardRepository) Update(card *model.Card, updatingCard *model.Card) error {
 	return r.db.Model(&card).Select("title").Updates(updatingCard).Error
+}
+
+func (r *cardRepository) Destroy(card *model.Card) error {
+	return r.db.Delete(&card).Error
 }
 
 func (r *cardRepository) Find(id int) (model.Card, error) {

@@ -48,6 +48,20 @@ func (mr *MockCardRepositoryMockRecorder) Create(arg0, arg1 interface{}) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockCardRepository)(nil).Create), arg0, arg1)
 }
 
+// Destroy mocks base method.
+func (m *MockCardRepository) Destroy(card *model.Card) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Destroy", card)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Destroy indicates an expected call of Destroy.
+func (mr *MockCardRepositoryMockRecorder) Destroy(card interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Destroy", reflect.TypeOf((*MockCardRepository)(nil).Destroy), card)
+}
+
 // Find mocks base method.
 func (m *MockCardRepository) Find(id int) (model.Card, error) {
 	m.ctrl.T.Helper()

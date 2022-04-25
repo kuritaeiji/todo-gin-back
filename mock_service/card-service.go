@@ -50,6 +50,20 @@ func (mr *MockCardServiceMockRecorder) Create(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockCardService)(nil).Create), arg0)
 }
 
+// Destroy mocks base method.
+func (m *MockCardService) Destroy(arg0 *gin.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Destroy", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Destroy indicates an expected call of Destroy.
+func (mr *MockCardServiceMockRecorder) Destroy(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Destroy", reflect.TypeOf((*MockCardService)(nil).Destroy), arg0)
+}
+
 // Update mocks base method.
 func (m *MockCardService) Update(arg0 *gin.Context) (model.Card, error) {
 	m.ctrl.T.Helper()

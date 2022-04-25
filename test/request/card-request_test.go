@@ -157,3 +157,16 @@ func (suite *ListRequestTestSuite) TestBadUpdateCardWithValidationError() {
 	suite.Equal(config.ValidationErrorResponse.Code, suite.rec.Code)
 	suite.Contains(suite.rec.Body.String(), config.ValidationErrorResponse.Json["content"])
 }
+
+func (suite *ListRequestTestSuite) TestSuccessDestroyCard() {
+	user := factory.CreateUser(&factory.UserConfig{})
+	list := factory.CreateList(&factory.ListConfig{}, user)
+	card := factory.CreateCard(&factory.CardConfig{}, list)
+	req := httptest.NewRequest("DELETE", fmt.Sprintf("/api/cards/%v", card.ID), nil)
+	req.Header.Add(config.TokenHeader, factory.CreateAccessToken(user))
+	suite.router.ServeHTTP(suite.rec, req)
+
+	suite.Equal(200, suite.rec.Code)
+	_, err := suite.repository.Find(card.ID)
+	suite.Equal(gorm.ErrRecordNotFound, err)
+}

@@ -63,6 +63,7 @@ func RouterSetup(userController controller.UserController) *gin.Engine {
 			cardMiddleware := middleware.NewCardMiddleware()
 			card.Use(cardMiddleware.Authorize)
 			card.PUT("/:id", cardCon.Update)
+			card.DELETE("/:id", cardCon.Destroy)
 		}
 	}
 

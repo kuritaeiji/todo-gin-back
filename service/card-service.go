@@ -17,6 +17,7 @@ type cardService struct {
 type CardService interface {
 	Create(*gin.Context) (model.Card, error)
 	Update(*gin.Context) (model.Card, error)
+	Destroy(*gin.Context) error
 }
 
 func NewCardService() CardService {
@@ -51,6 +52,11 @@ func (s *cardService) Update(ctx *gin.Context) (model.Card, error) {
 	err = s.repository.Update(&card, &updatingCard)
 
 	return card, err
+}
+
+func (s *cardService) Destroy(ctx *gin.Context) error {
+	card := ctx.MustGet(config.CardKey).(model.Card)
+	return s.repository.Destroy(&card)
 }
 
 // test

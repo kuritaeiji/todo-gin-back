@@ -9,6 +9,7 @@ import (
 	"github.com/kuritaeiji/todo-gin-back/factory"
 	"github.com/kuritaeiji/todo-gin-back/repository"
 	"github.com/stretchr/testify/suite"
+	"gorm.io/gorm"
 )
 
 type CardRepositoryTestSuite struct {
@@ -68,4 +69,15 @@ func (suite *CardRepositoryTestSuite) TestSuccessFind() {
 
 	suite.Nil(err)
 	suite.Equal(card, rCard)
+}
+
+func (suite *CardRepositoryTestSuite) TestSuccessDestroy() {
+	user := factory.CreateUser(&factory.UserConfig{})
+	list := factory.CreateList(&factory.ListConfig{}, user)
+	card := factory.CreateCard(&factory.CardConfig{}, list)
+	err := suite.repository.Destroy(&card)
+
+	suite.Nil(err)
+	_, err = suite.repository.Find(card.ID)
+	suite.Equal(gorm.ErrRecordNotFound, err)
 }

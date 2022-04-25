@@ -108,3 +108,22 @@ func (suite *CardServiceTestSuite) TestBadUpdateWithDBError() {
 
 	suite.Equal(err, rerr)
 }
+
+func (suite *CardServiceTestSuite) TestSuccessDestroyCard() {
+	var card model.Card
+	suite.ctx.Set(config.CardKey, card)
+	suite.cardRepositoryMock.EXPECT().Destroy(&card).Return(nil)
+	err := suite.service.Destroy(suite.ctx)
+
+	suite.Nil(err)
+}
+
+func (suite *CardServiceTestSuite) TestBadDestroyCardWithDBError() {
+	var card model.Card
+	suite.ctx.Set(config.CardKey, card)
+	err := errors.New("db error")
+	suite.cardRepositoryMock.EXPECT().Destroy(&card).Return(err)
+	rerr := suite.service.Destroy(suite.ctx)
+
+	suite.Equal(err, rerr)
+}
