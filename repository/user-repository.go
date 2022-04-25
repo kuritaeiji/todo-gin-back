@@ -7,7 +7,6 @@ import (
 	"github.com/kuritaeiji/todo-gin-back/db"
 	"github.com/kuritaeiji/todo-gin-back/model"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 )
 
 type UserRepository interface {
@@ -21,12 +20,14 @@ type UserRepository interface {
 }
 
 type userRepository struct {
-	db *gorm.DB
+	db             *gorm.DB
+	listRepository ListRepository
 }
 
 func NewUserRepository() UserRepository {
 	return &userRepository{
-		db: db.GetDB(),
+		db:             db.GetDB(),
+		listRepository: NewListRepository(),
 	}
 }
 
@@ -43,7 +44,19 @@ func (r *userRepository) Activate(user *model.User) error {
 }
 
 func (r *userRepository) Destroy(user *model.User) error {
-	return r.db.Select(clause.Associations).Delete(user).Error
+	err := r.listRepository.FindLists(user)
+	if err != nil {
+		return err
+	}
+
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		err := r.listRepository.DestroyLists(&user.Lists, tx)
+		if err != nil {
+			return err
+		}
+
+		return r.db.Delete(user).Error
+	})
 }
 
 func (r *userRepository) IsUnique(email string) (bool, error) {

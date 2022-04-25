@@ -16,7 +16,8 @@ import (
 
 type ListRepositoryTestSuite struct {
 	suite.Suite
-	repository repository.ListRepository
+	repository     repository.ListRepository
+	cardRepository repository.CardRepository
 }
 
 func (suite *ListRepositoryTestSuite) SetupSuite() {
@@ -25,6 +26,7 @@ func (suite *ListRepositoryTestSuite) SetupSuite() {
 	db.Init()
 
 	suite.repository = repository.NewListRepository()
+	suite.cardRepository = repository.NewCardRepository()
 }
 
 func (suite *ListRepositoryTestSuite) TearDownTest() {
@@ -65,12 +67,33 @@ func (suite *ListRepositoryTestSuite) TestSuccessDestroy() {
 	for i := 0; i <= 3; i++ {
 		lists = append(lists, factory.CreateList(&factory.ListConfig{Index: i}, user))
 	}
+	card := factory.CreateCard(&factory.CardConfig{}, lists[2])
 	suite.repository.Destroy(&lists[2])
 
 	_, err := suite.repository.Find(lists[2].ID)
 	suite.Equal(gorm.ErrRecordNotFound, err)
 	list3, _ := suite.repository.Find(lists[3].ID)
 	suite.Equal(2, list3.Index)
+	_, err = suite.cardRepository.Find(card.ID)
+	suite.Equal(gorm.ErrRecordNotFound, err)
+}
+
+func (suite *ListRepositoryTestSuite) TestSuccessDestroyLists() {
+	lists := make([]model.List, 0, 2)
+	user := factory.CreateUser(&factory.UserConfig{})
+	for i := 0; i <= 1; i++ {
+		lists = append(lists, factory.CreateList(&factory.ListConfig{}, user))
+	}
+	card := factory.CreateCard(&factory.CardConfig{}, lists[0])
+	err := suite.repository.DestroyLists(&lists, db.GetDB())
+
+	suite.Nil(err)
+	_, err = suite.repository.Find(lists[0].ID)
+	suite.Equal(gorm.ErrRecordNotFound, err)
+	_, err = suite.repository.Find(lists[1].ID)
+	suite.Equal(gorm.ErrRecordNotFound, err)
+	_, err = suite.repository.Find(card.ID)
+	suite.Equal(gorm.ErrRecordNotFound, err)
 }
 
 func (suite *ListRepositoryTestSuite) TestSuccessMoveWhenIncreaseIndex() {
@@ -126,4 +149,11 @@ func (suite *ListRepositoryTestSuite) TestSuccessFindLists() {
 
 	suite.Nil(err)
 	suite.Equal([]model.List{list1, list2}, user.Lists)
+}
+
+func (suite *ListRepositoryTestSuite) TestFindLists() {
+	user := factory.CreateUser(&factory.UserConfig{})
+	err := suite.repository.FindLists(&user)
+
+	suite.Nil(err)
 }
