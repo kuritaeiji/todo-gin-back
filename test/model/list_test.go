@@ -22,16 +22,20 @@ func TestListModelTestSuite(t *testing.T) {
 }
 
 func (suite *ListModelTestSuite) TestToJsonMethod() {
-	list := factory.NewList(&factory.ListConfig{Title: "title"})
+	list := model.List{ID: 1, Title: "list title"}
+	card := model.Card{ID: 1, Title: "card title", ListID: list.ID}
+	list.Cards = []model.Card{card}
+
 	json := list.ToJson()
-	suite.Equal(gin.H{"title": list.Title, "id": list.ID}, json)
+	suite.Equal(gin.H{"title": list.Title, "id": list.ID, "cards": []gin.H{card.ToJson()}}, json)
 }
 
 func (suite *ListModelTestSuite) TestToJsonListSlice() {
 	lists := make([]model.List, 0, 2)
 	for i := 0; i <= 1; i++ {
 		lists = append(lists, factory.NewList(&factory.ListConfig{}))
+		lists[i].Cards = []model.Card{factory.NewCard(&factory.CardConfig{})}
 	}
 	listsJsonSlice := model.ToJsonListSlice(lists)
-	suite.Equal([]gin.H{{"id": lists[0].ID, "title": lists[0].Title}, {"id": lists[1].ID, "title": lists[1].Title}}, listsJsonSlice)
+	suite.Equal([]gin.H{{"id": lists[0].ID, "title": lists[0].Title, "cards": []gin.H{lists[0].Cards[0].ToJson()}}, {"id": lists[1].ID, "title": lists[1].Title, "cards": []gin.H{lists[1].Cards[0].ToJson()}}}, listsJsonSlice)
 }

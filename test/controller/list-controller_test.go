@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -40,14 +41,31 @@ func TestListControllerSuite(t *testing.T) {
 }
 
 func (suite *ListControllerTestSuite) TestSuccessIndex() {
-	lists := make([]model.List, 0)
+	lists := make([]model.List, 0, 2)
+	for i := 0; i <= 1; i++ {
+		iString := strconv.Itoa(i)
+		list := model.List{ID: i, Title: iString}
+		card := model.Card{ID: i, Title: iString, ListID: list.ID}
+		list.Cards = append(list.Cards, card)
+		lists = append(lists, list)
+	}
 	suite.listServiceMock.EXPECT().Index(suite.ctx).Return(lists, nil)
 	suite.con.Index(suite.ctx)
 
 	suite.Equal(200, suite.rec.Code)
 	var rLists []model.List
 	json.Unmarshal(suite.rec.Body.Bytes(), &rLists)
-	suite.Equal(lists, rLists)
+	suite.Equal(lists[0].ID, rLists[0].ID)
+	suite.Equal(lists[0].Title, rLists[0].Title)
+	suite.Equal(lists[0].Cards[0].ID, rLists[0].Cards[0].ID)
+	suite.Equal(lists[0].Cards[0].Title, rLists[0].Cards[0].Title)
+	suite.Equal(lists[0].Cards[0].ListID, rLists[0].Cards[0].ListID)
+
+	suite.Equal(lists[1].ID, rLists[1].ID)
+	suite.Equal(lists[1].Title, rLists[1].Title)
+	suite.Equal(lists[1].Cards[0].ID, rLists[1].Cards[0].ID)
+	suite.Equal(lists[1].Cards[0].Title, rLists[1].Cards[0].Title)
+	suite.Equal(lists[1].Cards[0].ListID, rLists[1].Cards[0].ListID)
 }
 
 func (suite *ListControllerTestSuite) TestBadIndexWithError() {

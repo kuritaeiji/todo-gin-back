@@ -19,6 +19,7 @@ func (list *List) ToJson() gin.H {
 	return gin.H{
 		"id":    list.ID,
 		"title": list.Title,
+		"cards": ToJsonCardSlice(list.Cards),
 	}
 }
 
