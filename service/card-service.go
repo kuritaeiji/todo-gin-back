@@ -11,7 +11,8 @@ import (
 )
 
 type cardService struct {
-	repository repository.CardRepository
+	repository            repository.CardRepository
+	listMiddlewareService ListMiddlewareServive
 }
 
 type CardService interface {
@@ -22,7 +23,7 @@ type CardService interface {
 }
 
 func NewCardService() CardService {
-	return &cardService{repository: repository.NewCardRepository()}
+	return &cardService{repository: repository.NewCardRepository(), listMiddlewareService: NewListMiddlewareService()}
 }
 
 func (s *cardService) Create(ctx *gin.Context) (model.Card, error) {
@@ -68,12 +69,18 @@ func (s *cardService) Move(ctx *gin.Context) error {
 		return err
 	}
 
-	card := ctx.MustGet(config.CardKey).(model.Card)
+	// カレントユーザーが移動した先のリストを所有しているか確認する
 	currentUser := ctx.MustGet(config.CurrentUserKey).(model.User)
-	return s.repository.Move(&card, dtoMoveCard.ToListID, dtoMoveCard.ToIndex, &currentUser)
+	_, err = s.listMiddlewareService.FindAndAuthorizeList(dtoMoveCard.ToListID, currentUser)
+	if err != nil {
+		return err
+	}
+
+	card := ctx.MustGet(config.CardKey).(model.Card)
+	return s.repository.Move(&card, dtoMoveCard.ToListID, dtoMoveCard.ToIndex)
 }
 
 // test
-func TestNewCardService(cardRepository repository.CardRepository) CardService {
-	return &cardService{repository: cardRepository}
+func TestNewCardService(cardRepository repository.CardRepository, listMiddlewareService ListMiddlewareServive) CardService {
+	return &cardService{repository: cardRepository, listMiddlewareService: listMiddlewareService}
 }

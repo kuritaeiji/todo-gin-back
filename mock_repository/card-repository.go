@@ -78,17 +78,17 @@ func (mr *MockCardRepositoryMockRecorder) Find(id interface{}) *gomock.Call {
 }
 
 // Move mocks base method.
-func (m *MockCardRepository) Move(card *model.Card, toListID, toIndex int, currentUser *model.User) error {
+func (m *MockCardRepository) Move(card *model.Card, toListID, toIndex int) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Move", card, toListID, toIndex, currentUser)
+	ret := m.ctrl.Call(m, "Move", card, toListID, toIndex)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Move indicates an expected call of Move.
-func (mr *MockCardRepositoryMockRecorder) Move(card, toListID, toIndex, currentUser interface{}) *gomock.Call {
+func (mr *MockCardRepositoryMockRecorder) Move(card, toListID, toIndex interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Move", reflect.TypeOf((*MockCardRepository)(nil).Move), card, toListID, toIndex, currentUser)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Move", reflect.TypeOf((*MockCardRepository)(nil).Move), card, toListID, toIndex)
 }
 
 // Update mocks base method.

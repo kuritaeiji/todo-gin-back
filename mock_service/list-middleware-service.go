@@ -49,3 +49,18 @@ func (mr *MockListMiddlewareServiveMockRecorder) Authorize(arg0 interface{}) *go
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Authorize", reflect.TypeOf((*MockListMiddlewareServive)(nil).Authorize), arg0)
 }
+
+// FindAndAuthorizeList mocks base method.
+func (m *MockListMiddlewareServive) FindAndAuthorizeList(id int, currentUser model.User) (model.List, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindAndAuthorizeList", id, currentUser)
+	ret0, _ := ret[0].(model.List)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindAndAuthorizeList indicates an expected call of FindAndAuthorizeList.
+func (mr *MockListMiddlewareServiveMockRecorder) FindAndAuthorizeList(id, currentUser interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAndAuthorizeList", reflect.TypeOf((*MockListMiddlewareServive)(nil).FindAndAuthorizeList), id, currentUser)
+}

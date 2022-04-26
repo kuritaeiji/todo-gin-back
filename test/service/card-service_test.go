@@ -12,6 +12,7 @@ import (
 	"github.com/kuritaeiji/todo-gin-back/dto"
 	"github.com/kuritaeiji/todo-gin-back/factory"
 	"github.com/kuritaeiji/todo-gin-back/mock_repository"
+	"github.com/kuritaeiji/todo-gin-back/mock_service"
 	"github.com/kuritaeiji/todo-gin-back/model"
 	"github.com/kuritaeiji/todo-gin-back/service"
 	"github.com/kuritaeiji/todo-gin-back/validators"
@@ -20,9 +21,10 @@ import (
 
 type CardServiceTestSuite struct {
 	suite.Suite
-	service            service.CardService
-	cardRepositoryMock *mock_repository.MockCardRepository
-	ctx                *gin.Context
+	service                   service.CardService
+	cardRepositoryMock        *mock_repository.MockCardRepository
+	listMiddlewareServiceMock *mock_service.MockListMiddlewareServive
+	ctx                       *gin.Context
 }
 
 func (suite *CardServiceTestSuite) SetupSuite() {
@@ -32,7 +34,8 @@ func (suite *CardServiceTestSuite) SetupSuite() {
 
 func (suite *CardServiceTestSuite) SetupTest() {
 	suite.cardRepositoryMock = mock_repository.NewMockCardRepository(gomock.NewController(suite.T()))
-	suite.service = service.TestNewCardService(suite.cardRepositoryMock)
+	suite.listMiddlewareServiceMock = mock_service.NewMockListMiddlewareServive(gomock.NewController(suite.T()))
+	suite.service = service.TestNewCardService(suite.cardRepositoryMock, suite.listMiddlewareServiceMock)
 	suite.ctx, _ = gin.CreateTestContext(httptest.NewRecorder())
 }
 
@@ -135,9 +138,10 @@ func (suite *CardServiceTestSuite) TestSuccessMoveCard() {
 	suite.ctx.Request = req
 	var currentUser model.User
 	suite.ctx.Set(config.CurrentUserKey, currentUser)
+	suite.listMiddlewareServiceMock.EXPECT().FindAndAuthorizeList(dtoMoveCard.ToListID, currentUser).Return(model.List{}, nil)
 	var card model.Card
 	suite.ctx.Set(config.CardKey, card)
-	suite.cardRepositoryMock.EXPECT().Move(&card, dtoMoveCard.ToListID, dtoMoveCard.ToIndex, &currentUser).Return(nil)
+	suite.cardRepositoryMock.EXPECT().Move(&card, dtoMoveCard.ToListID, dtoMoveCard.ToIndex).Return(nil)
 	err := suite.service.Move(suite.ctx)
 
 	suite.Nil(err)
@@ -152,16 +156,29 @@ func (suite *CardServiceTestSuite) TestBadMoveCardWithValidationError() {
 	suite.IsType(validator.ValidationErrors{}, err)
 }
 
+func (suite *CardServiceTestSuite) TestBadMoveCardWithToListNotAuthorized() {
+	dtoMoveCard := &dto.MoveCard{}
+	req := httptest.NewRequest("PUT", "/api/cards/1/move", factory.CreateMoveCardRequestBody(dtoMoveCard))
+	suite.ctx.Request = req
+	var user model.User
+	suite.ctx.Set(config.CurrentUserKey, user)
+	suite.listMiddlewareServiceMock.EXPECT().FindAndAuthorizeList(dtoMoveCard.ToListID, user).Return(model.List{}, config.ForbiddenError)
+	err := suite.service.Move(suite.ctx)
+
+	suite.Equal(config.ForbiddenError, err)
+}
+
 func (suite *CardServiceTestSuite) TestBadMoveCardWithDBError() {
 	var dtoMoveCard dto.MoveCard
 	req := httptest.NewRequest("PUT", "/api/cards/1/move", factory.CreateMoveCardRequestBody(&dtoMoveCard))
 	suite.ctx.Request = req
 	var currentUser model.User
 	suite.ctx.Set(config.CurrentUserKey, currentUser)
+	suite.listMiddlewareServiceMock.EXPECT().FindAndAuthorizeList(dtoMoveCard.ToListID, currentUser).Return(model.List{}, nil)
 	var card model.Card
 	suite.ctx.Set(config.CardKey, card)
 	err := errors.New("db error")
-	suite.cardRepositoryMock.EXPECT().Move(&card, dtoMoveCard.ToListID, dtoMoveCard.ToIndex, &currentUser).Return(err)
+	suite.cardRepositoryMock.EXPECT().Move(&card, dtoMoveCard.ToListID, dtoMoveCard.ToIndex).Return(err)
 	rerr := suite.service.Move(suite.ctx)
 
 	suite.Equal(err, rerr)

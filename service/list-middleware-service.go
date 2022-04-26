@@ -17,6 +17,7 @@ type listMiddlewareServive struct {
 
 type ListMiddlewareServive interface {
 	Authorize(*gin.Context) (model.List, error)
+	FindAndAuthorizeList(id int, currentUser model.User) (model.List, error)
 }
 
 func NewListMiddlewareService() ListMiddlewareServive {
@@ -39,12 +40,16 @@ func (s *listMiddlewareServive) Authorize(ctx *gin.Context) (model.List, error) 
 		return model.List{}, err
 	}
 
+	currentUser := ctx.MustGet(config.CurrentUserKey).(model.User)
+	return s.FindAndAuthorizeList(id, currentUser)
+}
+
+func (s *listMiddlewareServive) FindAndAuthorizeList(id int, currentUser model.User) (model.List, error) {
 	list, err := s.repository.Find(id)
 	if err != nil {
 		return model.List{}, err
 	}
 
-	currentUser := ctx.MustGet(config.CurrentUserKey).(model.User)
 	if !currentUser.HasList(list) {
 		return model.List{}, config.ForbiddenError
 	}

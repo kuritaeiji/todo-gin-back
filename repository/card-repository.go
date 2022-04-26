@@ -3,7 +3,6 @@ package repository
 // mockgen -source=repository/card-repository.go -destination=./mock_repository/card-repository.go
 
 import (
-	"github.com/kuritaeiji/todo-gin-back/config"
 	"github.com/kuritaeiji/todo-gin-back/db"
 	"github.com/kuritaeiji/todo-gin-back/model"
 	"gorm.io/gorm"
@@ -18,7 +17,7 @@ type CardRepository interface {
 	Create(*model.Card, *model.List) error
 	Update(card *model.Card, updatingCard *model.Card) error
 	Destroy(card *model.Card) error
-	Move(card *model.Card, toListID int, toIndex int, currentUser *model.User) error
+	Move(card *model.Card, toListID int, toIndex int) error
 	Find(id int) (model.Card, error)
 }
 
@@ -43,7 +42,7 @@ func (r *cardRepository) Destroy(card *model.Card) error {
 	return r.db.Delete(&card).Error
 }
 
-func (r *cardRepository) Move(card *model.Card, toListID int, toIndex int, currentUser *model.User) error {
+func (r *cardRepository) Move(card *model.Card, toListID int, toIndex int) error {
 	if card.ListID == toListID {
 		if toIndex > card.Index {
 			return r.moveWhenIncreaseIndex(card, toIndex)
@@ -52,7 +51,7 @@ func (r *cardRepository) Move(card *model.Card, toListID int, toIndex int, curre
 		return r.moveWhenDecreaseIndex(card, toIndex)
 	}
 
-	return r.moveWhenChangeList(card, toListID, toIndex, currentUser)
+	return r.moveWhenChangeList(card, toListID, toIndex)
 }
 
 func (r *cardRepository) moveWhenIncreaseIndex(card *model.Card, toIndex int) error {
@@ -77,17 +76,9 @@ func (r *cardRepository) moveWhenDecreaseIndex(card *model.Card, toIndex int) er
 	})
 }
 
-func (r *cardRepository) moveWhenChangeList(card *model.Card, toListID int, toIndex int, currentUser *model.User) error {
-	list, err := r.listRepository.Find(toListID)
-	if err != nil {
-		return err
-	}
-	if !currentUser.HasList(list) {
-		return config.ForbiddenError
-	}
-
+func (r *cardRepository) moveWhenChangeList(card *model.Card, toListID int, toIndex int) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
-		err = tx.Model(model.Card{}).Where("cards.index > ? AND cards.list_id = ?", card.Index, card.ListID).Updates(minusIndexExpr).Error
+		err := tx.Model(model.Card{}).Where("cards.index > ? AND cards.list_id = ?", card.Index, card.ListID).Updates(minusIndexExpr).Error
 		if err != nil {
 			return err
 		}
