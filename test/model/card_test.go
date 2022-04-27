@@ -25,7 +25,7 @@ func (suite *CardModelTestSuite) TestToJson() {
 	card := factory.NewCard(&factory.CardConfig{})
 	cardJson := card.ToJson()
 
-	suite.Equal(gin.H{"id": card.ID, "title": card.Title, "listID": card.ListID}, cardJson)
+	suite.Equal(gin.H{"id": card.ID, "title": card.Title}, cardJson)
 }
 
 func (suite *CardModelTestSuite) TestToJsonCardSlice() {
@@ -35,5 +35,5 @@ func (suite *CardModelTestSuite) TestToJsonCardSlice() {
 	}
 	cardsJson := model.ToJsonCardSlice(cards)
 
-	suite.Equal([]gin.H{{"id": cards[0].ID, "title": cards[0].Title, "listID": cards[0].ListID}, {"id": cards[1].ID, "title": cards[1].Title, "listID": cards[1].ListID}}, cardsJson)
+	suite.Equal([]gin.H{{"id": cards[0].ID, "title": cards[0].Title}, {"id": cards[1].ID, "title": cards[1].Title}}, cardsJson)
 }

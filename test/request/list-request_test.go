@@ -72,13 +72,11 @@ func (suite *ListRequestTestSuite) TestSuccessIndex() {
 	suite.Equal(list1.Title, lists[0].Title)
 	suite.Equal(list1.Cards[0].ID, lists[0].Cards[0].ID)
 	suite.Equal(list1.Cards[0].Title, lists[0].Cards[0].Title)
-	suite.Equal(list1.Cards[0].ListID, lists[0].Cards[0].ListID)
 
 	suite.Equal(list2.ID, lists[1].ID)
 	suite.Equal(list2.Title, lists[1].Title)
 	suite.Equal(list2.Cards[0].ID, lists[1].Cards[0].ID)
 	suite.Equal(list2.Cards[0].Title, lists[1].Cards[0].Title)
-	suite.Equal(list2.Cards[0].ListID, lists[1].Cards[0].ListID)
 }
 
 func (suite *ListRequestTestSuite) TestSuccessCreate() {

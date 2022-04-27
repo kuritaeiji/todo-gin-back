@@ -76,7 +76,6 @@ func (suite *CardRequestTestSuite) TestSuccessCreate() {
 	json.Unmarshal(suite.rec.Body.Bytes(), &rCard)
 	suite.Equal(card.ID, rCard.ID)
 	suite.Equal(card.Title, rCard.Title)
-	suite.Equal(card.ListID, rCard.ListID)
 }
 
 func (suite *ListRequestTestSuite) TestBadCreateWithNotFoundList() {

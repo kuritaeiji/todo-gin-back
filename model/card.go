@@ -16,9 +16,8 @@ type Card struct {
 
 func (card *Card) ToJson() gin.H {
 	return gin.H{
-		"id":     card.ID,
-		"title":  card.Title,
-		"listID": card.ListID,
+		"id":    card.ID,
+		"title": card.Title,
 	}
 }
 
