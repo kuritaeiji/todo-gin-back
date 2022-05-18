@@ -23,7 +23,11 @@ func RouterSetup(userController controller.UserController) *gin.Engine {
 	guest := api.Group("")
 	{
 		guest.Use(authMiddleware.Guest)
-		guest.POST("/login", controller.NewAuthController().Login)
+
+		authCon := controller.NewAuthController()
+		guest.POST("/login", authCon.Login)
+		guest.GET("/google", authCon.Google)
+
 		user := guest.Group("/users")
 		{
 			user.POST("", userController.Create)

@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"math/rand"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -37,4 +38,15 @@ func Init() {
 	if err != nil || err2 != nil || err3 != nil {
 		panic("Failed to load env file")
 	}
+}
+
+func MakeRandomStr(digit int) string {
+	const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+	bytes := make([]byte, digit)
+	for i := range bytes {
+		bytes[i] = letters[rand.Intn(len(letters))]
+	}
+
+	return string(bytes)
 }

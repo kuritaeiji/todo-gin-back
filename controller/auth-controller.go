@@ -8,7 +8,8 @@ import (
 )
 
 type AuthController interface {
-	Login(*gin.Context)
+	Login(*gin.Context)  // GET /api/login
+	Google(*gin.Context) // GET /api/google
 }
 
 type authController struct {
@@ -41,6 +42,22 @@ func (c *authController) Login(ctx *gin.Context) {
 	ctx.JSON(200, gin.H{
 		"token": tokenString,
 	})
+}
+
+func (c *authController) Google(ctx *gin.Context) {
+	url, err := c.service.Google(ctx)
+	if err != nil {
+		ctx.Status(500)
+		return
+	}
+
+	ctx.JSON(200, gin.H{
+		"url": url,
+	})
+}
+
+func (c *authController) GoogleCallback(ctx *gin.Context) {
+
 }
 
 // test
