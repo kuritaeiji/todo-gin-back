@@ -16,6 +16,8 @@ import (
 type UserRepositoryTestSuite struct {
 	suite.Suite
 	userRepository repository.UserRepository
+	listRepository repository.ListRepository
+	cardRepository repository.CardRepository
 	db             *gorm.DB
 }
 
@@ -24,6 +26,8 @@ func (suite *UserRepositoryTestSuite) SetupSuite() {
 	config.Init()
 	db.Init()
 	suite.userRepository = repository.NewUserRepository()
+	suite.listRepository = repository.NewListRepository()
+	suite.cardRepository = repository.NewCardRepository()
 	suite.db = db.GetDB()
 }
 
@@ -103,16 +107,17 @@ func (suite *UserRepositoryTestSuite) TestBadFindByEmailWithRecordNotFound() {
 
 func (suite *UserRepositoryTestSuite) TestSuccessDestroy() {
 	user := factory.CreateUser(&factory.UserConfig{})
-	factory.CreateList(&factory.ListConfig{}, user)
+	list := factory.CreateList(&factory.ListConfig{}, user)
+	card := factory.CreateCard(&factory.CardConfig{}, list)
 	err := suite.userRepository.Destroy(&user)
 
 	suite.Nil(err)
-	var count int64
-	suite.db.Model(&model.User{}).Count(&count)
-	suite.Equal(int64(0), count)
-
-	suite.db.Model(&model.List{}).Count(&count)
-	suite.Equal(int64(0), count)
+	_, err = suite.userRepository.Find(user.ID)
+	suite.Equal(gorm.ErrRecordNotFound, err)
+	_, err = suite.listRepository.Find(list.ID)
+	suite.Equal(gorm.ErrRecordNotFound, err)
+	_, err = suite.cardRepository.Find(card.ID)
+	suite.Equal(gorm.ErrRecordNotFound, err)
 }
 
 func (suite *UserRepositoryTestSuite) TestBadDestroyWithDBError() {
@@ -120,4 +125,25 @@ func (suite *UserRepositoryTestSuite) TestBadDestroyWithDBError() {
 	err := suite.userRepository.Destroy(&user)
 
 	suite.Error(err)
+}
+
+func (suite *UserRepositoryTestSuite) TestTrueHasCard() {
+	user := factory.CreateUser(&factory.UserConfig{})
+	list := factory.CreateList(&factory.ListConfig{}, user)
+	card := factory.CreateCard(&factory.CardConfig{}, list)
+	hasCard, err := suite.userRepository.HasCard(card, user)
+
+	suite.True(hasCard)
+	suite.Nil(err)
+}
+
+func (suite *UserRepositoryTestSuite) TestFalseHasCard() {
+	user := factory.CreateUser(&factory.UserConfig{})
+	otherUser := factory.CreateUser(&factory.UserConfig{})
+	list := factory.CreateList(&factory.ListConfig{}, otherUser)
+	card := factory.CreateCard(&factory.CardConfig{}, list)
+	hasCard, err := suite.userRepository.HasCard(card, user)
+
+	suite.False(hasCard)
+	suite.Nil(err)
 }

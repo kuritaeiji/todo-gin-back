@@ -9,6 +9,7 @@ import (
 
 	gomock "github.com/golang/mock/gomock"
 	model "github.com/kuritaeiji/todo-gin-back/model"
+	gorm "gorm.io/gorm"
 )
 
 // MockListRepository is a mock of ListRepository interface.
@@ -62,6 +63,20 @@ func (mr *MockListRepositoryMockRecorder) Destroy(arg0 interface{}) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Destroy", reflect.TypeOf((*MockListRepository)(nil).Destroy), arg0)
 }
 
+// DestroyLists mocks base method.
+func (m *MockListRepository) DestroyLists(lists *[]model.List, tx *gorm.DB) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DestroyLists", lists, tx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DestroyLists indicates an expected call of DestroyLists.
+func (mr *MockListRepositoryMockRecorder) DestroyLists(lists, tx interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DestroyLists", reflect.TypeOf((*MockListRepository)(nil).DestroyLists), lists, tx)
+}
+
 // Find mocks base method.
 func (m *MockListRepository) Find(id int) (model.List, error) {
 	m.ctrl.T.Helper()
@@ -77,18 +92,18 @@ func (mr *MockListRepositoryMockRecorder) Find(id interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Find", reflect.TypeOf((*MockListRepository)(nil).Find), id)
 }
 
-// FindLists mocks base method.
-func (m *MockListRepository) FindLists(arg0 *model.User) error {
+// FindListsWithCards mocks base method.
+func (m *MockListRepository) FindListsWithCards(arg0 *model.User) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindLists", arg0)
+	ret := m.ctrl.Call(m, "FindListsWithCards", arg0)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// FindLists indicates an expected call of FindLists.
-func (mr *MockListRepositoryMockRecorder) FindLists(arg0 interface{}) *gomock.Call {
+// FindListsWithCards indicates an expected call of FindListsWithCards.
+func (mr *MockListRepositoryMockRecorder) FindListsWithCards(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindLists", reflect.TypeOf((*MockListRepository)(nil).FindLists), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindListsWithCards", reflect.TypeOf((*MockListRepository)(nil).FindListsWithCards), arg0)
 }
 
 // Move mocks base method.

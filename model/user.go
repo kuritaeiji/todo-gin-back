@@ -7,7 +7,7 @@ import (
 
 type User struct {
 	gorm.Model
-	ID             int    `gorm:"primary_key;AUTO_INCREMANT;not null" json:"id"`
+	ID             int    `gorm:"primaryKey;autoIncrement;not null" json:"id"`
 	Email          string `gorm:"type:varchar(100);uniqueIndex" json:"email"`
 	PasswordDigest string `gorm:"type:varchar(256)" json:"passwordDigest"`
 	Activated      bool   `gorm:"default:false" json:"activatedAt"`

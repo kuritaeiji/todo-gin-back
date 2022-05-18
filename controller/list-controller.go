@@ -6,7 +6,6 @@ import (
 	"github.com/kuritaeiji/todo-gin-back/config"
 	"github.com/kuritaeiji/todo-gin-back/model"
 	"github.com/kuritaeiji/todo-gin-back/service"
-	"gorm.io/gorm"
 )
 
 type listController struct {
@@ -54,16 +53,6 @@ func (c *listController) Create(ctx *gin.Context) {
 func (c *listController) Update(ctx *gin.Context) {
 	list, err := c.service.Update(ctx)
 
-	if err == gorm.ErrRecordNotFound {
-		ctx.AbortWithStatusJSON(config.RecordNotFoundErrorResponse.Code, config.RecordNotFoundErrorResponse.Json)
-		return
-	}
-
-	if err == config.ForbiddenError {
-		ctx.AbortWithStatusJSON(config.ForbiddenErrorResponse.Code, config.ForbiddenErrorResponse.Json)
-		return
-	}
-
 	if _, ok := err.(validator.ValidationErrors); ok {
 		ctx.AbortWithStatusJSON(config.ValidationErrorResponse.Code, config.ValidationErrorResponse.Json)
 		return
@@ -80,16 +69,6 @@ func (c *listController) Update(ctx *gin.Context) {
 func (c *listController) Destroy(ctx *gin.Context) {
 	err := c.service.Destroy(ctx)
 
-	if err == gorm.ErrRecordNotFound {
-		ctx.AbortWithStatusJSON(config.RecordNotFoundErrorResponse.Code, config.RecordNotFoundErrorResponse.Json)
-		return
-	}
-
-	if err == config.ForbiddenError {
-		ctx.AbortWithStatusJSON(config.ForbiddenErrorResponse.Code, config.ForbiddenErrorResponse.Json)
-		return
-	}
-
 	if err != nil {
 		ctx.AbortWithStatus(500)
 		return
@@ -100,15 +79,6 @@ func (c *listController) Destroy(ctx *gin.Context) {
 
 func (c *listController) Move(ctx *gin.Context) {
 	err := c.service.Move(ctx)
-	if err == gorm.ErrRecordNotFound {
-		ctx.AbortWithStatusJSON(config.RecordNotFoundErrorResponse.Code, config.RecordNotFoundErrorResponse.Json)
-		return
-	}
-
-	if err == config.ForbiddenError {
-		ctx.AbortWithStatusJSON(config.ForbiddenErrorResponse.Code, config.ForbiddenErrorResponse.Json)
-		return
-	}
 
 	if err != nil {
 		ctx.AbortWithStatus(500)

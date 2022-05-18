@@ -6,6 +6,7 @@ import (
 	"github.com/kuritaeiji/todo-gin-back/db"
 	"github.com/kuritaeiji/todo-gin-back/model"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type listRepository struct {
@@ -16,9 +17,10 @@ type ListRepository interface {
 	Create(*model.User, *model.List) error
 	Update(list *model.List, updatingList model.List) error
 	Destroy(*model.List) error
+	DestroyLists(lists *[]model.List, tx *gorm.DB) error
 	Move(list *model.List, toIndex int, currentUser *model.User) error
 	Find(id int) (model.List, error)
-	FindLists(*model.User) error
+	FindListsWithCards(*model.User) error
 }
 
 func NewListRepository() ListRepository {
@@ -35,7 +37,7 @@ func (r *listRepository) Update(list *model.List, updatingList model.List) error
 
 func (r *listRepository) Destroy(list *model.List) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
-		err := tx.Delete(&list).Error
+		err := tx.Select(clause.Associations).Delete(list).Error
 		if err != nil {
 			return err
 		}
@@ -47,6 +49,11 @@ func (r *listRepository) Destroy(list *model.List) error {
 
 		return nil
 	})
+}
+
+// userを削除する際にリストとカードを一括削除するのに使う
+func (r *listRepository) DestroyLists(lists *[]model.List, tx *gorm.DB) error {
+	return tx.Select(clause.Associations).Delete(lists).Error
 }
 
 func (r *listRepository) Move(list *model.List, toIndex int, currentUser *model.User) error {
@@ -89,7 +96,9 @@ func (r *listRepository) Find(id int) (model.List, error) {
 	return list, err
 }
 
-func (r *listRepository) FindLists(user *model.User) error {
-	// user.listsにlistsをsetする
-	return r.db.Where(model.List{UserID: user.ID}).Order("lists.index ASC").Find(&user.Lists).Error
+func (r *listRepository) FindListsWithCards(user *model.User) error {
+	// user.listsにlistsをsetする(cardもpreloadした状態で)
+	return r.db.Where(model.List{UserID: user.ID}).Order("lists.index ASC").Preload("Cards", func(tx *gorm.DB) *gorm.DB {
+		return tx.Order("cards.index ASC")
+	}).Find(&user.Lists).Error
 }

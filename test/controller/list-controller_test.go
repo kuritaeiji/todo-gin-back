@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -14,7 +15,6 @@ import (
 	"github.com/kuritaeiji/todo-gin-back/mock_service"
 	"github.com/kuritaeiji/todo-gin-back/model"
 	"github.com/stretchr/testify/suite"
-	"gorm.io/gorm"
 )
 
 type ListControllerTestSuite struct {
@@ -41,14 +41,31 @@ func TestListControllerSuite(t *testing.T) {
 }
 
 func (suite *ListControllerTestSuite) TestSuccessIndex() {
-	lists := make([]model.List, 0)
+	lists := make([]model.List, 0, 2)
+	for i := 0; i <= 1; i++ {
+		iString := strconv.Itoa(i)
+		list := model.List{ID: i, Title: iString}
+		card := model.Card{ID: i, Title: iString, ListID: list.ID}
+		list.Cards = append(list.Cards, card)
+		lists = append(lists, list)
+	}
 	suite.listServiceMock.EXPECT().Index(suite.ctx).Return(lists, nil)
 	suite.con.Index(suite.ctx)
 
 	suite.Equal(200, suite.rec.Code)
 	var rLists []model.List
 	json.Unmarshal(suite.rec.Body.Bytes(), &rLists)
-	suite.Equal(lists, rLists)
+	suite.Equal(lists[0].ID, rLists[0].ID)
+	suite.Equal(lists[0].Title, rLists[0].Title)
+	suite.Equal(lists[0].Cards[0].ID, rLists[0].Cards[0].ID)
+	suite.Equal(lists[0].Cards[0].Title, rLists[0].Cards[0].Title)
+	suite.Equal(lists[0].Cards[0].ListID, rLists[0].Cards[0].ListID)
+
+	suite.Equal(lists[1].ID, rLists[1].ID)
+	suite.Equal(lists[1].Title, rLists[1].Title)
+	suite.Equal(lists[1].Cards[0].ID, rLists[1].Cards[0].ID)
+	suite.Equal(lists[1].Cards[0].Title, rLists[1].Cards[0].Title)
+	suite.Equal(lists[1].Cards[0].ListID, rLists[1].Cards[0].ListID)
 }
 
 func (suite *ListControllerTestSuite) TestBadIndexWithError() {
@@ -98,22 +115,6 @@ func (suite *ListControllerTestSuite) TestSuccessUpdate() {
 	suite.Equal(list, rList)
 }
 
-func (suite *ListControllerTestSuite) TestBadUpdateWithRecordNotFound() {
-	suite.listServiceMock.EXPECT().Update(suite.ctx).Return(model.List{}, gorm.ErrRecordNotFound)
-	suite.con.Update(suite.ctx)
-
-	suite.Equal(config.RecordNotFoundErrorResponse.Code, suite.rec.Code)
-	suite.Contains(suite.rec.Body.String(), config.RecordNotFoundErrorResponse.Json["content"])
-}
-
-func (suite *ListControllerTestSuite) TestBadUpdateWithForbiddenError() {
-	suite.listServiceMock.EXPECT().Update(suite.ctx).Return(model.List{}, config.ForbiddenError)
-	suite.con.Update(suite.ctx)
-
-	suite.Equal(config.ForbiddenErrorResponse.Code, suite.rec.Code)
-	suite.Contains(suite.rec.Body.String(), config.ForbiddenErrorResponse.Json["content"])
-}
-
 func (suite *ListControllerTestSuite) TestBadUpdateWithValidationError() {
 	suite.listServiceMock.EXPECT().Update(suite.ctx).Return(model.List{}, validator.ValidationErrors{})
 	suite.con.Update(suite.ctx)
@@ -129,22 +130,6 @@ func (suite *ListControllerTestSuite) TestSuccessDestroy() {
 	suite.Equal(200, suite.rec.Code)
 }
 
-func (suite *ListControllerTestSuite) TestBadDestroyWithRecordNotFound() {
-	suite.listServiceMock.EXPECT().Destroy(suite.ctx).Return(gorm.ErrRecordNotFound)
-	suite.con.Destroy(suite.ctx)
-
-	suite.Equal(config.RecordNotFoundErrorResponse.Code, suite.rec.Code)
-	suite.Contains(suite.rec.Body.String(), config.RecordNotFoundErrorResponse.Json["content"])
-}
-
-func (suite *ListControllerTestSuite) TestBadDestroyWithForbiddenError() {
-	suite.listServiceMock.EXPECT().Destroy(suite.ctx).Return(config.ForbiddenError)
-	suite.con.Destroy(suite.ctx)
-
-	suite.Equal(config.ForbiddenErrorResponse.Code, suite.rec.Code)
-	suite.Contains(suite.rec.Body.String(), config.ForbiddenErrorResponse.Json["content"])
-}
-
 func (suite *ListControllerTestSuite) TestBadDestroyWithOtherError() {
 	suite.listServiceMock.EXPECT().Destroy(suite.ctx).Return(errors.New("error"))
 	suite.con.Destroy(suite.ctx)
@@ -157,22 +142,6 @@ func (suite *ListControllerTestSuite) TestSuccessMove() {
 	suite.con.Move(suite.ctx)
 
 	suite.Equal(200, suite.rec.Code)
-}
-
-func (suite *ListControllerTestSuite) TestBadMoveWithListNotFound() {
-	suite.listServiceMock.EXPECT().Move(suite.ctx).Return(gorm.ErrRecordNotFound)
-	suite.con.Move(suite.ctx)
-
-	suite.Equal(config.RecordNotFoundErrorResponse.Code, suite.rec.Code)
-	suite.Contains(suite.rec.Body.String(), config.RecordNotFoundErrorResponse.Json["content"])
-}
-
-func (suite *ListControllerTestSuite) TestBadMoveForbiddenError() {
-	suite.listServiceMock.EXPECT().Move(suite.ctx).Return(config.ForbiddenError)
-	suite.con.Move(suite.ctx)
-
-	suite.Equal(config.ForbiddenErrorResponse.Code, suite.rec.Code)
-	suite.Contains(suite.rec.Body.String(), config.ForbiddenErrorResponse.Json["content"])
 }
 
 func (suite *ListControllerTestSuite) TestBadMoveOtherError() {

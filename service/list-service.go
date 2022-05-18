@@ -3,8 +3,6 @@ package service
 // mockgen -source=service/list-service.go -destination=./mock_service/list-service.go
 
 import (
-	"strconv"
-
 	"github.com/gin-gonic/gin"
 	"github.com/kuritaeiji/todo-gin-back/config"
 	"github.com/kuritaeiji/todo-gin-back/dto"
@@ -30,7 +28,7 @@ func NewListService() ListService {
 
 func (s *listService) Index(ctx *gin.Context) ([]model.List, error) {
 	currentUser := ctx.MustGet(config.CurrentUserKey).(model.User)
-	err := s.rep.FindLists(&currentUser)
+	err := s.rep.FindListsWithCards(&currentUser)
 	return currentUser.Lists, err
 }
 
@@ -53,29 +51,16 @@ func (s *listService) Create(ctx *gin.Context) (model.List, error) {
 }
 
 func (s *listService) Update(ctx *gin.Context) (model.List, error) {
-	id, err := strconv.Atoi(ctx.Param("id"))
+	var dtoList dto.List
+	err := ctx.ShouldBindJSON(&dtoList)
 	if err != nil {
 		return model.List{}, err
 	}
 
-	list, err := s.rep.Find(id)
-	if err != nil {
-		return list, err
-	}
-
-	currentUser := ctx.MustGet(config.CurrentUserKey).(model.User)
-	if !currentUser.HasList(list) {
-		return list, config.ForbiddenError
-	}
-
-	var dtoList dto.List
-	err = ctx.ShouldBindJSON(&dtoList)
-	if err != nil {
-		return list, err
-	}
-
 	var updatingList model.List
 	dtoList.Transfer(&updatingList)
+
+	list := ctx.MustGet(config.ListKey).(model.List)
 	err = s.rep.Update(&list, updatingList)
 	if err != nil {
 		return list, err
@@ -85,46 +70,19 @@ func (s *listService) Update(ctx *gin.Context) (model.List, error) {
 }
 
 func (s *listService) Destroy(ctx *gin.Context) error {
-	id, err := strconv.Atoi(ctx.Param("id"))
-	if err != nil {
-		return err
-	}
-
-	list, err := s.rep.Find(id)
-	if err != nil {
-		return err
-	}
-
-	currentUser := ctx.MustGet(config.CurrentUserKey).(model.User)
-	if !currentUser.HasList(list) {
-		return config.ForbiddenError
-	}
-
+	list := ctx.MustGet(config.ListKey).(model.List)
 	return s.rep.Destroy(&list)
 }
 
 func (s *listService) Move(ctx *gin.Context) error {
-	id, err := strconv.Atoi(ctx.Param("id"))
-	if err != nil {
-		return err
-	}
-
-	list, err := s.rep.Find(id)
-	if err != nil {
-		return err
-	}
-
-	currentUser := ctx.MustGet(config.CurrentUserKey).(model.User)
-	if !currentUser.HasList(list) {
-		return config.ForbiddenError
-	}
-
 	var moveList dto.MoveList
-	err = ctx.ShouldBindJSON(&moveList)
+	err := ctx.ShouldBindJSON(&moveList)
 	if err != nil {
 		return err
 	}
 
+	list := ctx.MustGet(config.ListKey).(model.List)
+	currentUser := ctx.MustGet(config.CurrentUserKey).(model.User)
 	return s.rep.Move(&list, moveList.Index, &currentUser)
 }
 

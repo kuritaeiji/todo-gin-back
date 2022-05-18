@@ -7,17 +7,19 @@ import (
 
 type List struct {
 	gorm.Model
-	ID     int    `gorm:"primary_key;AUTO_INCREMANT;not null" json:"id"`
+	ID     int    `gorm:"primaryKey;autoIncrement;not null" json:"id"`
 	Title  string `gorm:"type:varchar(50);not null" json:"title"`
 	Index  int    `json:"index"`
 	UserID int    `json:"userID"`
-	User   User
+	User   User   `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	Cards  []Card
 }
 
 func (list *List) ToJson() gin.H {
 	return gin.H{
 		"id":    list.ID,
 		"title": list.Title,
+		"cards": ToJsonCardSlice(list.Cards),
 	}
 }
 

@@ -7,7 +7,6 @@ import (
 	"github.com/kuritaeiji/todo-gin-back/db"
 	"github.com/kuritaeiji/todo-gin-back/model"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 )
 
 type UserRepository interface {
@@ -17,15 +16,18 @@ type UserRepository interface {
 	IsUnique(email string) (bool, error)
 	Find(id int) (model.User, error)
 	FindByEmail(email string) (model.User, error)
+	HasCard(card model.Card, user model.User) (bool, error)
 }
 
 type userRepository struct {
-	db *gorm.DB
+	db             *gorm.DB
+	listRepository ListRepository
 }
 
 func NewUserRepository() UserRepository {
 	return &userRepository{
-		db: db.GetDB(),
+		db:             db.GetDB(),
+		listRepository: NewListRepository(),
 	}
 }
 
@@ -42,7 +44,19 @@ func (r *userRepository) Activate(user *model.User) error {
 }
 
 func (r *userRepository) Destroy(user *model.User) error {
-	return r.db.Select(clause.Associations).Delete(user).Error
+	err := r.listRepository.FindListsWithCards(user)
+	if err != nil {
+		return err
+	}
+
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		err := r.listRepository.DestroyLists(&user.Lists, tx)
+		if err != nil {
+			return err
+		}
+
+		return r.db.Delete(user).Error
+	})
 }
 
 func (r *userRepository) IsUnique(email string) (bool, error) {
@@ -72,4 +86,13 @@ func (r *userRepository) FindByEmail(email string) (model.User, error) {
 	}
 
 	return user, nil
+}
+
+func (r *userRepository) HasCard(card model.Card, user model.User) (bool, error) {
+	err := r.db.Joins("List").First(&card).Error
+	if err != nil {
+		return false, err
+	}
+
+	return card.List.UserID == user.ID, nil
 }

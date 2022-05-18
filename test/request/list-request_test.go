@@ -59,6 +59,8 @@ func (suite *ListRequestTestSuite) TestSuccessIndex() {
 	token := factory.CreateAccessToken(user)
 	list1 := factory.CreateList(&factory.ListConfig{Index: 0}, user)
 	list2 := factory.CreateList(&factory.ListConfig{Index: 1}, user)
+	list1.Cards = []model.Card{factory.CreateCard(&factory.CardConfig{}, list1)}
+	list2.Cards = []model.Card{factory.CreateCard(&factory.CardConfig{}, list2)}
 	req := httptest.NewRequest("GET", "/api/lists", nil)
 	req.Header.Add(config.TokenHeader, token)
 	suite.router.ServeHTTP(suite.rec, req)
@@ -67,7 +69,14 @@ func (suite *ListRequestTestSuite) TestSuccessIndex() {
 	var lists []model.List
 	json.Unmarshal(suite.rec.Body.Bytes(), &lists)
 	suite.Equal(list1.ID, lists[0].ID)
+	suite.Equal(list1.Title, lists[0].Title)
+	suite.Equal(list1.Cards[0].ID, lists[0].Cards[0].ID)
+	suite.Equal(list1.Cards[0].Title, lists[0].Cards[0].Title)
+
 	suite.Equal(list2.ID, lists[1].ID)
+	suite.Equal(list2.Title, lists[1].Title)
+	suite.Equal(list2.Cards[0].ID, lists[1].Cards[0].ID)
+	suite.Equal(list2.Cards[0].Title, lists[1].Cards[0].Title)
 }
 
 func (suite *ListRequestTestSuite) TestSuccessCreate() {
@@ -212,7 +221,7 @@ func (suite *ListRequestTestSuite) TestSuccessMoveWhenIncreaseIndex() {
 	suite.router.ServeHTTP(suite.rec, req)
 
 	suite.Equal(200, suite.rec.Code)
-	suite.repository.FindLists(&user)
+	suite.repository.FindListsWithCards(&user)
 	suite.Equal("0", user.Lists[0].Title)
 	suite.Equal("2", user.Lists[1].Title)
 	suite.Equal("3", user.Lists[2].Title)
@@ -236,7 +245,7 @@ func (suite *ListRequestTestSuite) TestSuccessMoveWhenDecreaseIndex() {
 	suite.router.ServeHTTP(suite.rec, req)
 
 	suite.Equal(200, suite.rec.Code)
-	suite.repository.FindLists(&user)
+	suite.repository.FindListsWithCards(&user)
 	suite.Equal("0", user.Lists[0].Title)
 	suite.Equal("3", user.Lists[1].Title)
 	suite.Equal("1", user.Lists[2].Title)

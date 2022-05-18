@@ -106,6 +106,21 @@ func (mr *MockUserRepositoryMockRecorder) FindByEmail(email interface{}) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByEmail", reflect.TypeOf((*MockUserRepository)(nil).FindByEmail), email)
 }
 
+// HasCard mocks base method.
+func (m *MockUserRepository) HasCard(card model.Card, user model.User) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "HasCard", card, user)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// HasCard indicates an expected call of HasCard.
+func (mr *MockUserRepositoryMockRecorder) HasCard(card, user interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasCard", reflect.TypeOf((*MockUserRepository)(nil).HasCard), card, user)
+}
+
 // IsUnique mocks base method.
 func (m *MockUserRepository) IsUnique(email string) (bool, error) {
 	m.ctrl.T.Helper()

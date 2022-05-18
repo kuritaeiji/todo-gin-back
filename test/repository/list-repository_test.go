@@ -16,7 +16,8 @@ import (
 
 type ListRepositoryTestSuite struct {
 	suite.Suite
-	repository repository.ListRepository
+	repository     repository.ListRepository
+	cardRepository repository.CardRepository
 }
 
 func (suite *ListRepositoryTestSuite) SetupSuite() {
@@ -25,6 +26,7 @@ func (suite *ListRepositoryTestSuite) SetupSuite() {
 	db.Init()
 
 	suite.repository = repository.NewListRepository()
+	suite.cardRepository = repository.NewCardRepository()
 }
 
 func (suite *ListRepositoryTestSuite) TearDownTest() {
@@ -65,12 +67,33 @@ func (suite *ListRepositoryTestSuite) TestSuccessDestroy() {
 	for i := 0; i <= 3; i++ {
 		lists = append(lists, factory.CreateList(&factory.ListConfig{Index: i}, user))
 	}
+	card := factory.CreateCard(&factory.CardConfig{}, lists[2])
 	suite.repository.Destroy(&lists[2])
 
 	_, err := suite.repository.Find(lists[2].ID)
 	suite.Equal(gorm.ErrRecordNotFound, err)
 	list3, _ := suite.repository.Find(lists[3].ID)
 	suite.Equal(2, list3.Index)
+	_, err = suite.cardRepository.Find(card.ID)
+	suite.Equal(gorm.ErrRecordNotFound, err)
+}
+
+func (suite *ListRepositoryTestSuite) TestSuccessDestroyLists() {
+	lists := make([]model.List, 0, 2)
+	user := factory.CreateUser(&factory.UserConfig{})
+	for i := 0; i <= 1; i++ {
+		lists = append(lists, factory.CreateList(&factory.ListConfig{}, user))
+	}
+	card := factory.CreateCard(&factory.CardConfig{}, lists[0])
+	err := suite.repository.DestroyLists(&lists, db.GetDB())
+
+	suite.Nil(err)
+	_, err = suite.repository.Find(lists[0].ID)
+	suite.Equal(gorm.ErrRecordNotFound, err)
+	_, err = suite.repository.Find(lists[1].ID)
+	suite.Equal(gorm.ErrRecordNotFound, err)
+	_, err = suite.repository.Find(card.ID)
+	suite.Equal(gorm.ErrRecordNotFound, err)
 }
 
 func (suite *ListRepositoryTestSuite) TestSuccessMoveWhenIncreaseIndex() {
@@ -82,7 +105,7 @@ func (suite *ListRepositoryTestSuite) TestSuccessMoveWhenIncreaseIndex() {
 	err := suite.repository.Move(&lists[1], 3, &user)
 
 	suite.Nil(err)
-	suite.repository.FindLists(&user)
+	suite.repository.FindListsWithCards(&user)
 	suite.Equal("1", user.Lists[3].Title)
 	suite.Equal("3", user.Lists[2].Title)
 	suite.Equal("2", user.Lists[1].Title)
@@ -100,7 +123,7 @@ func (suite *ListRepositoryTestSuite) TestSuccessMoveWhenDecreaseIndex() {
 	err := suite.repository.Move(&lists[3], 1, &user)
 
 	suite.Nil(err)
-	suite.repository.FindLists(&user)
+	suite.repository.FindListsWithCards(&user)
 	suite.Equal("0", user.Lists[0].Title)
 	suite.Equal("3", user.Lists[1].Title)
 	suite.Equal("1", user.Lists[2].Title)
@@ -122,8 +145,24 @@ func (suite *ListRepositoryTestSuite) TestSuccessFindLists() {
 	user := factory.CreateUser(&factory.UserConfig{})
 	list1 := factory.CreateList(&factory.ListConfig{}, user)
 	list2 := factory.CreateList(&factory.ListConfig{Index: 1}, user)
-	err := suite.repository.FindLists(&user)
+	list1Cards := make([]model.Card, 0, 2)
+	list2Cards := make([]model.Card, 0, 2)
+	for i := 1; i >= 0; i-- {
+		list1Cards = append(list1Cards, factory.CreateCard(&factory.CardConfig{Index: i}, list1))
+		list2Cards = append(list2Cards, factory.CreateCard(&factory.CardConfig{Index: i}, list2))
+	}
+	err := suite.repository.FindListsWithCards(&user)
 
 	suite.Nil(err)
-	suite.Equal([]model.List{list1, list2}, user.Lists)
+	suite.Equal(list1.ID, user.Lists[0].ID)
+	suite.Equal(list2.ID, user.Lists[1].ID)
+	suite.Equal([]model.Card{list1Cards[1], list1Cards[0]}, user.Lists[0].Cards)
+	suite.Equal([]model.Card{list2Cards[1], list2Cards[0]}, user.Lists[1].Cards)
+}
+
+func (suite *ListRepositoryTestSuite) TestFindLists() {
+	user := factory.CreateUser(&factory.UserConfig{})
+	err := suite.repository.FindListsWithCards(&user)
+
+	suite.Nil(err)
 }
