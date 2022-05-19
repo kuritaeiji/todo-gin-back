@@ -19,6 +19,7 @@ func NewCorsMiddleware() gin.HandlerFunc {
 			"Accept-Encoding",
 			"Authorization",
 		},
-		MaxAge: 24 * time.Hour,
+		AllowCredentials: true,
+		MaxAge:           24 * time.Hour,
 	})
 }

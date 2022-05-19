@@ -12,6 +12,8 @@ var (
 	PasswordAuthenticationError = errors.New("password is not authenticated")
 	EmailClientError            = errors.New("email client error")
 	ForbiddenError              = errors.New("forbidden")
+	CsrfError                   = errors.New("csrf error")
+	StandardError               = errors.New("standard error")
 )
 
 type ErrorResponse struct {

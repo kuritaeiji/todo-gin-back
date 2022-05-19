@@ -13,6 +13,7 @@ type UserRepository interface {
 	Create(user *model.User) error
 	Activate(user *model.User) error
 	Destroy(user *model.User) error
+	FindOrCreateByOpenID(openID string) (model.User, error)
 	IsUnique(email string) (bool, error)
 	Find(id int) (model.User, error)
 	FindByEmail(email string) (model.User, error)
@@ -57,6 +58,25 @@ func (r *userRepository) Destroy(user *model.User) error {
 
 		return r.db.Delete(user).Error
 	})
+}
+
+func (r *userRepository) FindOrCreateByOpenID(openID string) (model.User, error) {
+	var user model.User
+	err := r.db.Model(model.User{}).Where("open_id = ?", openID).First(&user).Error
+
+	// ユーザーが見つかった場合とエラーが発生した場合
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return user, err
+	}
+
+	// ユーザーが見つからなかった場合
+	if err == gorm.ErrRecordNotFound {
+		user.OpenID = openID
+		user.Activated = true
+		err = r.db.Create(&user).Error
+	}
+
+	return user, err
 }
 
 func (r *userRepository) IsUnique(email string) (bool, error) {

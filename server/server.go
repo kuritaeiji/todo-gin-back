@@ -27,6 +27,7 @@ func RouterSetup(userController controller.UserController) *gin.Engine {
 		authCon := controller.NewAuthController()
 		guest.POST("/login", authCon.Login)
 		guest.GET("/google", authCon.Google)
+		guest.POST("/google/login", authCon.GoogleLogin)
 
 		user := guest.Group("/users")
 		{

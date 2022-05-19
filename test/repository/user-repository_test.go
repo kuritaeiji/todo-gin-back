@@ -127,6 +127,24 @@ func (suite *UserRepositoryTestSuite) TestBadDestroyWithDBError() {
 	suite.Error(err)
 }
 
+func (suite *UserRepositoryTestSuite) TestSuccessFindOrCreateByOpenIDWhenUserHasBeenAlreadyCreated() {
+	const openID = "1"
+	user := factory.CreateUser(&factory.UserConfig{OpenID: openID})
+	rUser, err := suite.userRepository.FindOrCreateByOpenID(openID)
+
+	suite.Nil(err)
+	suite.Equal(user, rUser)
+}
+
+func (suite *UserRepositoryTestSuite) TestSuccessFindOrCreateByOpenIDWhenUserHasNotBeenCreated() {
+	const openID = "1"
+	user, err := suite.userRepository.FindOrCreateByOpenID(openID)
+	rUser, _ := suite.userRepository.FindOrCreateByOpenID(openID)
+
+	suite.Nil(err)
+	suite.Equal(user, rUser)
+}
+
 func (suite *UserRepositoryTestSuite) TestTrueHasCard() {
 	user := factory.CreateUser(&factory.UserConfig{})
 	list := factory.CreateList(&factory.ListConfig{}, user)
