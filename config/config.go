@@ -18,7 +18,11 @@ const (
 )
 
 var (
-	WorkDir string
+	WorkDir          string
+	CsrfCustomHeader = map[string]string{
+		"key":   "X-Requested-With",
+		"value": "XMLHttpRequest",
+	}
 )
 
 func Init() {

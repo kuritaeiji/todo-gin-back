@@ -16,6 +16,9 @@ func Init() {
 func RouterSetup(userController controller.UserController) *gin.Engine {
 	r := gin.Default()
 	r.Use(middleware.NewCorsMiddleware())
+	if gin.Mode() != gin.TestMode {
+		r.Use(middleware.NewCsrfMiddleware().ConfirmRequestHeader)
+	}
 
 	api := r.Group("/api")
 
