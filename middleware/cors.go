@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/kuritaeiji/todo-gin-back/config"
 )
 
 func NewCorsMiddleware() gin.HandlerFunc {
@@ -18,7 +19,9 @@ func NewCorsMiddleware() gin.HandlerFunc {
 			"Content-Length",
 			"Accept-Encoding",
 			"Authorization",
+			config.CsrfCustomHeader["key"],
 		},
-		MaxAge: 24 * time.Hour,
+		AllowCredentials: true,
+		MaxAge:           24 * time.Hour,
 	})
 }

@@ -16,6 +16,9 @@ func Init() {
 func RouterSetup(userController controller.UserController) *gin.Engine {
 	r := gin.Default()
 	r.Use(middleware.NewCorsMiddleware())
+	if gin.Mode() != gin.TestMode {
+		r.Use(middleware.NewCsrfMiddleware().ConfirmRequestHeader)
+	}
 
 	api := r.Group("/api")
 
@@ -23,7 +26,12 @@ func RouterSetup(userController controller.UserController) *gin.Engine {
 	guest := api.Group("")
 	{
 		guest.Use(authMiddleware.Guest)
-		guest.POST("/login", controller.NewAuthController().Login)
+
+		authCon := controller.NewAuthController()
+		guest.POST("/login", authCon.Login)
+		guest.GET("/google", authCon.Google)
+		guest.POST("/google/login", authCon.GoogleLogin)
+
 		user := guest.Group("/users")
 		{
 			user.POST("", userController.Create)

@@ -18,6 +18,7 @@ type UserConfig struct {
 	Email              string
 	Password           string
 	Activated          bool
+	OpenID             string
 	NotUseDefaultValue bool
 }
 
@@ -53,6 +54,7 @@ func NewUser(config *UserConfig) model.User {
 	dtoUser.Transfer(&user)
 	user.ID = config.ID
 	user.Activated = config.Activated
+	user.OpenID = config.OpenID
 
 	return user
 }

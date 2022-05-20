@@ -8,7 +8,9 @@ import (
 )
 
 type AuthController interface {
-	Login(*gin.Context)
+	Login(*gin.Context)       // GET /api/login
+	Google(*gin.Context)      // GET /api/google
+	GoogleLogin(*gin.Context) // POST /api/google/login
 }
 
 type authController struct {
@@ -34,8 +36,32 @@ func (c *authController) Login(ctx *gin.Context) {
 	}
 
 	if err != nil {
-		ctx.Status(500)
+		ctx.AbortWithStatus(500)
 		return
+	}
+
+	ctx.JSON(200, gin.H{
+		"token": tokenString,
+	})
+}
+
+func (c *authController) Google(ctx *gin.Context) {
+	url, state, err := c.service.Google(ctx)
+	if err != nil {
+		ctx.AbortWithStatus(500)
+		return
+	}
+
+	ctx.SetCookie("state", state, 3600, "/", "", false, true)
+	ctx.JSON(200, gin.H{
+		"url": url,
+	})
+}
+
+func (c *authController) GoogleLogin(ctx *gin.Context) {
+	tokenString, err := c.service.GoogleLogin(ctx)
+	if err != nil {
+		ctx.AbortWithStatus(500)
 	}
 
 	ctx.JSON(200, gin.H{

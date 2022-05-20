@@ -11,6 +11,7 @@ type User struct {
 	Email          string `gorm:"type:varchar(100);uniqueIndex" json:"email"`
 	PasswordDigest string `gorm:"type:varchar(256)" json:"passwordDigest"`
 	Activated      bool   `gorm:"default:false" json:"activatedAt"`
+	OpenID         string `gorm:"type:varchar(256);index" json:"openID"`
 
 	Lists []List
 }

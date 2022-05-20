@@ -1,6 +1,7 @@
 package controller_test
 
 import (
+	"errors"
 	"net/http/httptest"
 	"testing"
 
@@ -59,4 +60,41 @@ func (suite *AuthControllerTestSuite) TestBadLoginWithPasswordAuthenticationErro
 
 	suite.Equal(config.PasswordAuthenticationErrorResponse.Code, suite.rec.Code)
 	suite.Contains(suite.rec.Body.String(), config.PasswordAuthenticationErrorResponse.Json["content"])
+}
+
+func (suite *AuthControllerTestSuite) TestSuccessGoogle() {
+	const url = "url"
+	const state = "state"
+
+	suite.authServiceMock.EXPECT().Google(suite.ctx).Return(url, state, nil)
+	suite.controller.Google(suite.ctx)
+
+	suite.Equal(state, suite.rec.Result().Cookies()[0].Value)
+	suite.Contains(suite.rec.Body.String(), url)
+	suite.Equal(200, suite.rec.Code)
+}
+
+func (suite *AuthControllerTestSuite) TestBadGoogleWithError() {
+	err := errors.New("error")
+	suite.authServiceMock.EXPECT().Google(suite.ctx).Return("", "", err)
+	suite.controller.Google(suite.ctx)
+
+	suite.Equal(500, suite.rec.Code)
+}
+
+func (suite *AuthControllerTestSuite) TestSuccessGoogleLogin() {
+	const token = "token"
+	suite.authServiceMock.EXPECT().GoogleLogin(suite.ctx).Return(token, nil)
+	suite.controller.GoogleLogin(suite.ctx)
+
+	suite.Equal(200, suite.rec.Code)
+	suite.Contains(suite.rec.Body.String(), token)
+}
+
+func (suite *AuthControllerTestSuite) TestBadGoogleLoginWithError() {
+	err := errors.New("error")
+	suite.authServiceMock.EXPECT().GoogleLogin(suite.ctx).Return("", err)
+	suite.controller.GoogleLogin(suite.ctx)
+
+	suite.Equal(500, suite.rec.Code)
 }

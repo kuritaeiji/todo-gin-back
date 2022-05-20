@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"math/rand"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -17,7 +18,11 @@ const (
 )
 
 var (
-	WorkDir string
+	WorkDir          string
+	CsrfCustomHeader = map[string]string{
+		"key":   "X-Requested-With",
+		"value": "XMLHttpRequest",
+	}
 )
 
 func Init() {
@@ -29,6 +34,7 @@ func Init() {
 		err2 = godotenv.Load(fmt.Sprintf("%v/config/secret.env", WorkDir))
 	case gin.TestMode:
 		err = godotenv.Load(fmt.Sprintf("%v/config/test.env", WorkDir))
+		err2 = godotenv.Load(fmt.Sprintf("%v/config/secret.env", WorkDir))
 	default:
 		err = godotenv.Load(fmt.Sprintf("%v/config/release.env", WorkDir))
 	}
@@ -37,4 +43,15 @@ func Init() {
 	if err != nil || err2 != nil || err3 != nil {
 		panic("Failed to load env file")
 	}
+}
+
+func MakeRandomStr(digit int) string {
+	const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+	bytes := make([]byte, digit)
+	for i := range bytes {
+		bytes[i] = letters[rand.Intn(len(letters))]
+	}
+
+	return string(bytes)
 }
