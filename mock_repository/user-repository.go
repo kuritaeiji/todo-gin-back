@@ -106,6 +106,21 @@ func (mr *MockUserRepositoryMockRecorder) FindByEmail(email interface{}) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByEmail", reflect.TypeOf((*MockUserRepository)(nil).FindByEmail), email)
 }
 
+// FindOrCreateByOpenID mocks base method.
+func (m *MockUserRepository) FindOrCreateByOpenID(openID string) (model.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindOrCreateByOpenID", openID)
+	ret0, _ := ret[0].(model.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindOrCreateByOpenID indicates an expected call of FindOrCreateByOpenID.
+func (mr *MockUserRepositoryMockRecorder) FindOrCreateByOpenID(openID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindOrCreateByOpenID", reflect.TypeOf((*MockUserRepository)(nil).FindOrCreateByOpenID), openID)
+}
+
 // HasCard mocks base method.
 func (m *MockUserRepository) HasCard(card model.Card, user model.User) (bool, error) {
 	m.ctrl.T.Helper()

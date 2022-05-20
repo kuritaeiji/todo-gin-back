@@ -3,13 +3,13 @@ package service
 // mockgen -source=service/auth-service.go -destination=mock_service/auth-service.go
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/gin-gonic/gin"
 	"github.com/kuritaeiji/todo-gin-back/config"
 	"github.com/kuritaeiji/todo-gin-back/dto"
+	"github.com/kuritaeiji/todo-gin-back/gateway"
 	"github.com/kuritaeiji/todo-gin-back/repository"
 	"golang.org/x/oauth2"
 )
@@ -25,15 +25,15 @@ type authService struct {
 	dtoOauth       dto.Oauth
 	userRepository repository.UserRepository
 	jwtService     JWTService
+	oauthGateway   gateway.OauthGateway
 }
-
-var idToken *oidc.IDToken
 
 func NewAuthService() AuthService {
 	return &authService{
 		dto:            dto.Auth{},
 		userRepository: repository.NewUserRepository(),
 		jwtService:     NewJWTService(),
+		oauthGateway:   gateway.NewOauthGateway(),
 	}
 }
 
@@ -56,18 +56,19 @@ func (s *authService) Login(ctx *gin.Context) (string, error) {
 }
 
 func (s *authService) Google(ctx *gin.Context) (string, string, error) {
-	provider, err := searchProvider(ctx)
+	state := config.MakeRandomStr(20)
+
+	provider, err := s.oauthGateway.SearchProvider(ctx)
 	if err != nil {
 		return "", "", err
 	}
 
-	oauth2Config := createOauth2Config(provider)
-	state := config.MakeRandomStr(20)
-
+	oauth2Config := CreateOauth2Config(provider)
 	return oauth2Config.AuthCodeURL(state), state, nil
 }
 
 func (s *authService) GoogleLogin(ctx *gin.Context) (string, error) {
+	// stateの検証
 	cookieState, err := ctx.Cookie("state")
 	if err != nil {
 		return "", config.CsrfError
@@ -78,45 +79,41 @@ func (s *authService) GoogleLogin(ctx *gin.Context) (string, error) {
 		return "", config.CsrfError
 	}
 
-	provider, err := searchProvider(ctx)
+	provider, err := s.oauthGateway.SearchProvider(ctx)
 	if err != nil {
 		return "", err
 	}
 
-	oauth2Config := createOauth2Config(provider)
-	oauth2Token, err := oauth2Config.Exchange(ctx.Request.Context(), s.dtoOauth.Code)
-	if rErr, ok := err.(*oauth2.RetrieveError); ok {
-		body := string(rErr.Body)
-		fmt.Println(body)
-	}
+	// トークンエンドポイントにリクエスト
+	oauth2Config := CreateOauth2Config(provider)
+	oauth2Token, err := s.oauthGateway.RequestTokenEndpoint(oauth2Config, ctx, s.dtoOauth.Code)
 	if err != nil {
 		return "", err
 	}
 
+	// id_tokenの取り出し
 	rawIDToken, ok := oauth2Token.Extra("id_token").(string)
 	if !ok {
 		return "", config.StandardError
 	}
 
-	verifier := provider.Verifier(&oidc.Config{ClientID: os.Getenv("CLIENT_ID")})
-	idToken, err = verifier.Verify(ctx, rawIDToken)
+	// id_tokenの検証
+	idToken, err := s.oauthGateway.VerifyIDToken(ctx, provider, rawIDToken)
 	if err != nil {
 		return "", config.StandardError
 	}
 
+	// open_idによるユーザーの作成もしくは探索
 	user, err := s.userRepository.FindOrCreateByOpenID(idToken.Subject)
 	if err != nil {
 		return "", err
 	}
 
+	// jwtを作成
 	return s.jwtService.CreateJWT(user, DayFromNowAccessToken), nil
 }
 
-func searchProvider(ctx *gin.Context) (*oidc.Provider, error) {
-	return oidc.NewProvider(ctx.Request.Context(), os.Getenv("GOOGLE_OAUTH_URL"))
-}
-
-func createOauth2Config(provider *oidc.Provider) oauth2.Config {
+func CreateOauth2Config(provider *oidc.Provider) oauth2.Config {
 	return oauth2.Config{
 		ClientID:     os.Getenv("CLIENT_ID"),
 		ClientSecret: os.Getenv("CLIENT_SECRET"),
@@ -127,9 +124,10 @@ func createOauth2Config(provider *oidc.Provider) oauth2.Config {
 }
 
 // test
-func TestNewAuthService(userRepository repository.UserRepository, jwtService JWTService) AuthService {
+func TestNewAuthService(userRepository repository.UserRepository, jwtService JWTService, oauthGateway gateway.OauthGateway) AuthService {
 	return &authService{
 		userRepository: userRepository,
 		jwtService:     jwtService,
+		oauthGateway:   oauthGateway,
 	}
 }

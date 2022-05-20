@@ -30,6 +30,7 @@ func Init() {
 		err2 = godotenv.Load(fmt.Sprintf("%v/config/secret.env", WorkDir))
 	case gin.TestMode:
 		err = godotenv.Load(fmt.Sprintf("%v/config/test.env", WorkDir))
+		err2 = godotenv.Load(fmt.Sprintf("%v/config/secret.env", WorkDir))
 	default:
 		err = godotenv.Load(fmt.Sprintf("%v/config/release.env", WorkDir))
 	}

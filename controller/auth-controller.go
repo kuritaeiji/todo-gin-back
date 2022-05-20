@@ -36,7 +36,7 @@ func (c *authController) Login(ctx *gin.Context) {
 	}
 
 	if err != nil {
-		ctx.Status(500)
+		ctx.AbortWithStatus(500)
 		return
 	}
 
@@ -48,7 +48,7 @@ func (c *authController) Login(ctx *gin.Context) {
 func (c *authController) Google(ctx *gin.Context) {
 	url, state, err := c.service.Google(ctx)
 	if err != nil {
-		ctx.Status(500)
+		ctx.AbortWithStatus(500)
 		return
 	}
 
@@ -61,7 +61,7 @@ func (c *authController) Google(ctx *gin.Context) {
 func (c *authController) GoogleLogin(ctx *gin.Context) {
 	tokenString, err := c.service.GoogleLogin(ctx)
 	if err != nil {
-		ctx.Status(500)
+		ctx.AbortWithStatus(500)
 	}
 
 	ctx.JSON(200, gin.H{
