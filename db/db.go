@@ -6,7 +6,6 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/kuritaeiji/todo-gin-back/dto"
 	"github.com/kuritaeiji/todo-gin-back/model"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -41,7 +40,6 @@ func initDB(dsn string, logLevel logger.LogLevel) {
 		panic(fmt.Sprintf("Failed to open mysql\n%v", err.Error()))
 	}
 	migrate()
-	seed()
 }
 
 func GetDB() *gorm.DB {
@@ -63,16 +61,6 @@ func migrate() {
 	db.AutoMigrate(model.User{})
 	db.AutoMigrate(model.List{})
 	db.AutoMigrate(model.Card{})
-}
-
-func seed() {
-	dtoUser := dto.User{Email: "user@example.com", Password: "Password1010"}
-	var user model.User
-	dtoUser.Transfer(&user)
-	user.Activated = true
-	if db.Model(model.User{}).First(&user).Error == gorm.ErrRecordNotFound {
-		db.Create(&user)
-	}
 }
 
 // test

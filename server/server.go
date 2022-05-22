@@ -95,8 +95,8 @@ func RouterSetup(userController controller.UserController) *gin.Engine {
 func router() *gin.Engine {
 	if gin.Mode() == gin.ReleaseMode {
 		router := gin.New()
-		f, _ := os.Create("gin.log")
-		gin.DefaultWriter = io.MultiWriter(f)
+		f, _ := os.Create(fmt.Sprintf("%v/gin.log", os.Getenv("TODO_GIN_WORKDIR")))
+		gin.DefaultWriter = io.MultiWriter(f, os.Stdout)
 		router.Use(gin.LoggerWithFormatter(func(params gin.LogFormatterParams) string {
 			user, _ := params.Keys[config.CurrentUserKey].(model.User)
 			return fmt.Sprintf("日時: %s IP: %s リクエスト: [%s] %s ユーザーID: %v レスポンス: %v エラー: %s\n",
