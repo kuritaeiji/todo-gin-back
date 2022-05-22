@@ -5,7 +5,7 @@ RUN apt-get install -y build-essential git
 
 ENV LANG=C.UTF-8 \
     TZ=Asia/Tokyo \
-    GIN_MODE=release \
+    # GIN_MODE=release \
     TODO_GIN_WORKDIR=/app
 
 WORKDIR /app
@@ -13,4 +13,3 @@ WORKDIR /app
 COPY . /app
 RUN go mod download
 RUN go build -o app
-# CMD ["go", "run", "main.go"]
