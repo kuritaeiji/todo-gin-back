@@ -11,7 +11,7 @@ import (
 
 func NewCorsMiddleware() gin.HandlerFunc {
 	return cors.New(cors.Config{
-		AllowOrigins: []string{os.Getenv("FRONT_ORIGIN")},
+		AllowOrigins: []string{os.Getenv("FRONT_ORIGIN"), "https://todo-gin.ml"},
 		AllowMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders: []string{
 			"Access-Control-Allow-Headers",
