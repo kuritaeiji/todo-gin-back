@@ -6,7 +6,6 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/gin-gonic/gin"
 	"github.com/kuritaeiji/todo-gin-back/dto"
 	"github.com/kuritaeiji/todo-gin-back/model"
 	"gorm.io/driver/mysql"
@@ -67,14 +66,12 @@ func migrate() {
 }
 
 func seed() {
-	if gin.Mode() == gin.ReleaseMode {
-		dtoUser := dto.User{Email: "user@example.com", Password: "Password1010"}
-		var user model.User
-		dtoUser.Transfer(&user)
-		user.Activated = true
-		if db.Model(model.User{}).First(&user).Error == gorm.ErrRecordNotFound {
-			db.Create(&user)
-		}
+	dtoUser := dto.User{Email: "user@example.com", Password: "Password1010"}
+	var user model.User
+	dtoUser.Transfer(&user)
+	user.Activated = true
+	if db.Model(model.User{}).First(&user).Error == gorm.ErrRecordNotFound {
+		db.Create(&user)
 	}
 }
 
