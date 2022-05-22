@@ -1,6 +1,8 @@
 package server
 
 import (
+	"os"
+
 	"github.com/gin-gonic/gin"
 	"github.com/kuritaeiji/todo-gin-back/controller"
 	"github.com/kuritaeiji/todo-gin-back/middleware"
@@ -10,7 +12,11 @@ import (
 
 func Init() {
 	router := RouterSetup(controller.NewUserController())
-	router.Run()
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	router.Run(":", port)
 }
 
 func RouterSetup(userController controller.UserController) *gin.Engine {
