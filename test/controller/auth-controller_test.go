@@ -69,7 +69,7 @@ func (suite *AuthControllerTestSuite) TestSuccessGoogle() {
 	suite.authServiceMock.EXPECT().Google(suite.ctx).Return(url, state, nil)
 	suite.controller.Google(suite.ctx)
 
-	suite.Equal(state, suite.rec.Result().Cookies()[0].Value)
+	suite.Contains(suite.rec.Body.String(), state)
 	suite.Contains(suite.rec.Body.String(), url)
 	suite.Equal(200, suite.rec.Code)
 }

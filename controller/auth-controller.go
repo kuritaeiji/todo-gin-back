@@ -52,9 +52,9 @@ func (c *authController) Google(ctx *gin.Context) {
 		return
 	}
 
-	ctx.SetCookie("state", state, 3600, "/", "", false, true)
 	ctx.JSON(200, gin.H{
-		"url": url,
+		"url":   url,
+		"state": state,
 	})
 }
 
