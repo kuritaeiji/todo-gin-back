@@ -31,11 +31,11 @@ func Init() {
 	switch gin.Mode() {
 	case gin.DebugMode:
 		err = godotenv.Load(fmt.Sprintf("%v/config/development.env", WorkDir))
-		// err2 = godotenv.Load(fmt.Sprintf("%v/config/secret.env", WorkDir))
+		err2 = godotenv.Load(fmt.Sprintf("%v/config/secret.env", WorkDir))
 	case gin.TestMode:
 		err = godotenv.Load(fmt.Sprintf("%v/config/test.env", WorkDir))
 		err2 = godotenv.Load(fmt.Sprintf("%v/config/secret.env", WorkDir))
-	default:
+	case gin.ReleaseMode:
 		err = godotenv.Load(fmt.Sprintf("%v/config/release.env", WorkDir))
 	}
 
