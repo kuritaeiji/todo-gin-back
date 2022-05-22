@@ -1,12 +1,17 @@
 package server
 
 import (
+	// "bytes"
+	"fmt"
+	"io"
 	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/kuritaeiji/todo-gin-back/config"
 	"github.com/kuritaeiji/todo-gin-back/controller"
 	"github.com/kuritaeiji/todo-gin-back/middleware"
 	"github.com/kuritaeiji/todo-gin-back/mock_gateway"
+	"github.com/kuritaeiji/todo-gin-back/model"
 	"github.com/kuritaeiji/todo-gin-back/service"
 )
 
@@ -20,7 +25,7 @@ func Init() {
 }
 
 func RouterSetup(userController controller.UserController) *gin.Engine {
-	r := gin.Default()
+	r := router()
 	r.Use(middleware.NewCorsMiddleware())
 	if gin.Mode() != gin.TestMode {
 		r.Use(middleware.NewCsrfMiddleware().ConfirmRequestHeader)
@@ -85,6 +90,30 @@ func RouterSetup(userController controller.UserController) *gin.Engine {
 	}
 
 	return r
+}
+
+func router() *gin.Engine {
+	if gin.Mode() == gin.ReleaseMode {
+		router := gin.New()
+		f, _ := os.Create(fmt.Sprintf("%v/gin.log", os.Getenv("TODO_GIN_WORKDIR")))
+		gin.DefaultWriter = io.MultiWriter(f)
+		router.Use(gin.LoggerWithFormatter(func(params gin.LogFormatterParams) string {
+			user, _ := params.Keys[config.CurrentUserKey].(model.User)
+			return fmt.Sprintf("日時: %s IP: %s リクエスト: [%s] %s ユーザーID: %v レスポンス: %v エラー: %s\n",
+				params.TimeStamp.Format("2006-01-02 03:04:05"),
+				params.ClientIP,
+				params.Method,
+				params.Path,
+				user.ID,
+				params.StatusCode,
+				params.ErrorMessage,
+			)
+		}))
+		router.Use(gin.Recovery())
+		return router
+	}
+
+	return gin.Default()
 }
 
 // test用 sendgridのmailclientをモック化

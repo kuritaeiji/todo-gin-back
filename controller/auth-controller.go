@@ -61,6 +61,7 @@ func (c *authController) Google(ctx *gin.Context) {
 func (c *authController) GoogleLogin(ctx *gin.Context) {
 	tokenString, err := c.service.GoogleLogin(ctx)
 	if err != nil {
+		ctx.Error(err)
 		ctx.AbortWithStatus(500)
 	}
 
