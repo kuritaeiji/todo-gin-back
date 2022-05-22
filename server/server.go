@@ -93,7 +93,7 @@ func RouterSetup(userController controller.UserController) *gin.Engine {
 }
 
 func router() *gin.Engine {
-	if os.Getenv("GIN_MODE") == "release" {
+	if gin.Mode() == gin.ReleaseMode {
 		router := gin.New()
 		f, _ := os.Create(fmt.Sprintf("%v/gin.log", os.Getenv("TODO_GIN_WORKDIR")))
 		gin.DefaultWriter = io.MultiWriter(f)
