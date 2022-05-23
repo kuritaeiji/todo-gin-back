@@ -71,6 +71,7 @@ func (r *userRepository) FindOrCreateByOpenID(openID string) (model.User, error)
 
 	// ユーザーが見つからなかった場合
 	if err == gorm.ErrRecordNotFound {
+		user.Email = openID
 		user.OpenID = openID
 		user.Activated = true
 		err = r.db.Create(&user).Error

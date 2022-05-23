@@ -138,11 +138,13 @@ func (suite *UserRepositoryTestSuite) TestSuccessFindOrCreateByOpenIDWhenUserHas
 
 func (suite *UserRepositoryTestSuite) TestSuccessFindOrCreateByOpenIDWhenUserHasNotBeenCreated() {
 	const openID = "1"
-	user, err := suite.userRepository.FindOrCreateByOpenID(openID)
-	rUser, _ := suite.userRepository.FindOrCreateByOpenID(openID)
+	_, err := suite.userRepository.FindOrCreateByOpenID(openID)
+	rUser, _ := suite.userRepository.FindByEmail(openID)
 
 	suite.Nil(err)
-	suite.Equal(user, rUser)
+	suite.Equal(openID, rUser.OpenID)
+	suite.Equal(openID, rUser.Email)
+	suite.True(rUser.Activated)
 }
 
 func (suite *UserRepositoryTestSuite) TestTrueHasCard() {
