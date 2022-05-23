@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/gin-gonic/gin"
 	"github.com/kuritaeiji/todo-gin-back/config"
 	"github.com/kuritaeiji/todo-gin-back/db"
 	"github.com/kuritaeiji/todo-gin-back/seed"
@@ -13,6 +14,8 @@ func main() {
 	db.Init()
 	defer db.CloseDB()
 	validators.Init()
-	seed.CreateSeedData()
+	if gin.Mode() == gin.ReleaseMode {
+		seed.CreateSeedData()
+	}
 	server.Init()
 }
