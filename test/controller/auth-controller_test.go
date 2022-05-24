@@ -3,6 +3,7 @@ package controller_test
 import (
 	"errors"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -69,7 +70,10 @@ func (suite *AuthControllerTestSuite) TestSuccessGoogle() {
 	suite.authServiceMock.EXPECT().Google(suite.ctx).Return(url, state, nil)
 	suite.controller.Google(suite.ctx)
 
-	suite.Contains(suite.rec.Body.String(), state)
+	stateCookie := suite.rec.Result().Cookies()[0]
+	suite.Equal(config.StateCookieKey, stateCookie.Name)
+	suite.Equal(state, stateCookie.Value)
+	suite.Equal(os.Getenv("DOMAIN"), stateCookie.Domain)
 	suite.Contains(suite.rec.Body.String(), url)
 	suite.Equal(200, suite.rec.Code)
 }
