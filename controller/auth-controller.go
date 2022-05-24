@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"os"
+
 	"github.com/gin-gonic/gin"
 	"github.com/kuritaeiji/todo-gin-back/config"
 	"github.com/kuritaeiji/todo-gin-back/service"
@@ -51,6 +53,13 @@ func (c *authController) Google(ctx *gin.Context) {
 		ctx.AbortWithStatus(500)
 		return
 	}
+
+	var secure bool
+	if gin.Mode() == gin.ReleaseMode {
+		secure = true
+	}
+
+	ctx.SetCookie(config.StateCookieKey, state, 3600, "", os.Getenv("DOMAIN"), secure, true)
 
 	ctx.JSON(200, gin.H{
 		"url":   url,

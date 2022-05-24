@@ -69,8 +69,13 @@ func (s *authService) Google(ctx *gin.Context) (string, string, error) {
 
 func (s *authService) GoogleLogin(ctx *gin.Context) (string, error) {
 	// stateの検証
+	cookieState, err := ctx.Cookie(config.StateCookieKey)
+	if err != nil {
+		return "", err
+	}
+
 	ctx.ShouldBindJSON(&s.dtoOauth)
-	if s.dtoOauth.LocalStorageState != s.dtoOauth.State {
+	if cookieState != s.dtoOauth.State {
 		return "", config.CsrfError
 	}
 

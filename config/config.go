@@ -15,6 +15,7 @@ const (
 	CurrentUserKey = "currentUser"
 	ListKey        = "list"
 	CardKey        = "card"
+	StateCookieKey = "state"
 )
 
 var (
